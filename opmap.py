@@ -3,6 +3,7 @@ from glob import glob
 import os
 import matplotlib.pyplot as plt
 from cmap_bipolar import bipolar
+import scipy
 from scipy import signal, ndimage
 from scipy.interpolate import interp1d, splrep, splev
 
@@ -150,4 +151,26 @@ class PhaseMap( VideoData ):
         points = ( np.array(points) / float(self.shrink)).astype(np.int8)
         super(PhaseMap, self).plot(points, start, end, filter_size, savepath)
         
+class PhaseVarianceMap( VideoData ):
+
+    def __init__(self, phasemap, size = 9):
+        assert size > 0
         
+        super(PhaseVarianceMap, self).__init__(*phasemap.data.shape)
+        kernel = np.ones((size, size), dtype=np.float32)
+        kernel /= np.sum(kernel)
+
+        for frame in range(self.data.shape[0]):
+            im_cos = np.cos(phasemap.data[frame,:,:])
+            im_sin = np.sin(phasemap.data[frame,:,:])
+            im_cos = signal.convolve2d(im_cos, kernel, mode = 'same', boundary = 'fill')
+            im_sin = signal.convolve2d(im_sin, kernel, mode = 'same', boundary = 'fill')
+            self.data[frame, :, :] = 1.0 - np.abs( im_cos + 1j * im_sin )
+
+        self.roi = scipy.ndimage.binary_closing(phasemap.roi, structure=np.ones((size,size))).astype(phasemap.roi.dtype)
+        self.roi = scipy.ndimage.binary_opening(self.roi, structure=np.ones((3*size,3*size))).astype(phasemap.roi.dtype)
+        self.data *= self.roi
+            
+        self.vmin = 0.0
+        self.vmax = 1.0
+        self.cmap = 'gray'
