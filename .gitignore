@@ -1,0 +1,5 @@
+*.png
+*.pyc
+result*
+sample_session/*
+.ipynb_checkpoints/*
