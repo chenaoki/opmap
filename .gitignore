@@ -3,3 +3,4 @@
 result*
 sample_session/*
 .ipynb_checkpoints/*
+*.ipynb
