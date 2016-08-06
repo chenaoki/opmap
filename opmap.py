@@ -6,37 +6,56 @@ from cmap_bipolar import bipolar
 import scipy
 from scipy import signal, ndimage
 from scipy.interpolate import interp1d, splrep, splev
+import pickle
+import cv2
 
+
+cam_dtype = {'sa4':np.ushort, 'mini':np.ushort, 'max':np.uint8, 'max10':np.ushort}
 
 class VideoData(object):
-    
+
     def __init__(self, length, height, width ):
         self.data = np.zeros((length, height, width), dtype=np.float32)
         self.roi = np.ones( ( height, width), dtype=np.float32 )
         self.vmin =  0.0
         self.vmax = 1.0
         self.cmap = 'hot'
-    
+
     def showFrame(self, frame):
         assert frame >= 0 and frame < self.data.shape[0]
         plt.imshow(self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
-    
+
+    def setROI(self, top=None, bottom=None, left=None, right=None):
+        if top is not None :
+            assert top >= 0 and top < self.roi.shape[0]
+            self.roi[:top, :] = 0
+        if bottom is not None :
+            assert bottom >= 0 and bottom < self.roi.shape[0]
+            self.roi[bottom:, :] = 0
+        if left is not None :
+            assert left >= 0 and left < self.roi.shape[1]
+            self.roi[:, :top] = 0
+        if right is not None :
+            assert right >= 0 and right < self.roi.shape[1]
+            self.roi[:, right:] = 0
+        self.data *= self.roi
+
     def showROI(self):
         plt.imshow(self.roi, vmin=0.0, vmax=1.0, cmap='gray')
-        
+
     def saveImage(self, savedir, img_type = 'png'):
         if not os.path.exists(savedir):
-            os.mkdir(savedir)
+            os.makedirs(savedir)
         for frame in range(self.data.shape[0]):
             plt.imsave(
-                '{0}/{1:0>6}.{2}'.format(savedir, frame, img_type), 
+                '{0}/{1:0>6}.{2}'.format(savedir, frame, img_type),
                 self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap
             )
         plt.imsave(
-         '{0}/roi.{1}'.format(savedir, img_type), 
+         '{0}/roi.{1}'.format(savedir, img_type),
             self.roi, vmin=0.0, vmax=1.0, cmap='gray'
         )
-    
+
     def plot(self, points, start=None, end=None, filter_size=None, savepath = None):
         if start is None : start = 0
         if end is None : end = self.data.shape[0]
@@ -54,60 +73,94 @@ class VideoData(object):
             plt.show()
         else:
             plt.savefig(savepath)
-        
 
 class VmemMap( VideoData ):
-    
-    def __init__(self, path, cam_type, image_width, image_height, frame_start, frame_end, range_min, range_max ):
-    
-        postfix = {'sa4' : 'raww'}
 
-        self.files = glob(path+"/*."+postfix[cam_type])
-        self.files = sorted(self.files)[frame_start:frame_end]
-        
+    def __init__(self, path, cam_type, image_width, image_height, frame_start, frame_end ):
+
+        self.files = sorted(glob(path+"/*.raw*"))
+        assert len(self.files) > 0
+        self.files = self.files[frame_start:frame_end]
+
         super(VmemMap, self).__init__(len(self.files), image_height, image_width)
 
-        if cam_type == 'sa4':
-            for i, f in enumerate(self.files):
-                im = np.fromfile(f, dtype=np.ushort).reshape(image_height, image_width)
-                self.data[i, :,:] = im                
+        self.cam_type = cam_type
+        for i, f in enumerate(self.files):
+            im = np.fromfile(f, dtype=cam_dtype[self.cam_type])
+            im = im.reshape(image_height, image_width)
+            self.data[i, :,:] = im
+        self.im_cam = np.copy(self.data[0,:,:])
+
         im_max = np.max(self.data, axis=0)
         im_min = np.min(self.data, axis=0)
-        im_range = (im_max - im_min) + (im_max == im_min) * 1
-        
-        self.roi = ( (im_range > range_min) * 1 ) * ((im_range < range_max)  * 1)
-        self.data = 2.0 * (im_max - self.data ) / im_range - 1.0
-        self.data *= self.roi
-        
+        self.im_range = (im_max - im_min) + (im_max == im_min) * 1
+        self.data_org = 2.0 * (im_max - self.data ) / self.im_range - 1.0
+        self.data = np.copy(self.data_org)
+
         self.vmin = -1.0
         self.vmax = 1.0
-        self.cmap = bipolar(neutral=0, lutsize=1024)        
+        self.cmap = bipolar(neutral=0, lutsize=1024)
         return
-    
+
+    def setDiffRange(self, diff_min=None, diff_max=None):
+        self.roi = 1.0 # reset
+        if diff_min is None :
+          diff_min = 0
+        if diff_max is None :
+          diff_max = np.iinfo(cam_dtype[self.cam_type]).max
+        self.roi *= (self.im_range>=diff_min)*1
+        self.roi *= (self.im_range<=diff_max)*1
+        self.data = self.data_org*self.roi
+        return
+
     def smooth(self, size):
         assert size > 0
         for frame in range( self.data.shape[0]):
             self.data[frame,:,:] = ndimage.gaussian_filter(self.data[frame,:,:], sigma = size)
         return
-        
+
+    def selectPoints(self):
+        points = []
+        def onClick(event, x, y, flag, params):
+            wname, img = params
+            if event == cv2.EVENT_LBUTTONDOWN:
+                img_disp = np.copy(img)
+                points.append((x, y))
+                for i, p in enumerate(points):
+                    cv2.circle(img_disp, p, 2, (255,0,0))
+                    cv2.putText(img_disp,str(i),(p[0]-5, p[1]-5),cv2.FONT_HERSHEY_PLAIN, 0.6,(255,0,0))
+                cv2.imshow(wname, img_disp)
+                cv2.imwrite(wname+'.png', img_disp)
+        wname = "selectPoints"
+        img = self.im_cam
+        img /= (np.max(img)/255)
+        img = img.astype(np.uint8)
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        cv2.namedWindow(wname)
+        cv2.setMouseCallback(wname, onClick, [wname, img] )
+        cv2.imshow(wname, img)
+        while cv2.waitKey(0) != 27 : pass
+        cv2.destroyWindow(wname)
+        return np.array(points)
+
 class PhaseMap( VideoData ):
-    
+
     def __init__(self, vmem, shrink = 4, fs = 1000.0, cutoff = 20.0):
-        
+
         self.shrink = shrink
         size_org = vmem.data.shape
-        
+
         super(PhaseMap, self).__init__(size_org[0],size_org[1]/shrink, size_org[2]/shrink)
-        
+
         nyq = fs/2.0
         fe = cutoff / nyq   # Cut off frequency : 20Hz
         numtaps = 15  # Filter size
         b = signal.firwin(numtaps, fe) # Low pass filter
-        
+
         for n in range(self.data.shape[1]):
             for m in range(self.data.shape[2]):
                 n_ = n*shrink
-                m_ = m*shrink       
+                m_ = m*shrink
                 try:
                     assert vmem.roi[n_, m_] > 0
                     data = vmem.data[ :, n_, m_]
@@ -121,13 +174,12 @@ class PhaseMap( VideoData ):
                 except:
                     self.data[:, n, m] = 0.0
                     self.roi[n, m] = 0.0
-        
+
         self.vmin = -np.pi
         self.vmax = np.pi
         self.cmap = 'jet'
         return
 
-                    
     def smooth(self, size = 4):
         assert size > 0
         def phaseComplement(value):
@@ -146,16 +198,12 @@ class PhaseMap( VideoData ):
                     new_data[frame, n, m] = phaseComplement( base +  diff)
                     #new_data[frame, n, m] = phaseComplement( base + np.mean(difference.flatten()) )
         self.data = new_data
-        
-    def plot(self, points, start=None, end=None, filter_size=None, savepath = None):
-        points = ( np.array(points) / float(self.shrink)).astype(np.int8)
-        super(PhaseMap, self).plot(points, start, end, filter_size, savepath)
-        
+
 class PhaseVarianceMap( VideoData ):
 
     def __init__(self, phasemap, size = 9):
         assert size > 0
-        
+
         super(PhaseVarianceMap, self).__init__(*phasemap.data.shape)
         kernel = np.ones((size, size), dtype=np.float32)
         kernel /= np.sum(kernel)
@@ -167,10 +215,10 @@ class PhaseVarianceMap( VideoData ):
             im_sin = signal.convolve2d(im_sin, kernel, mode = 'same', boundary = 'fill')
             self.data[frame, :, :] = 1.0 - np.abs( im_cos + 1j * im_sin )
 
-        self.roi = scipy.ndimage.binary_closing(phasemap.roi, structure=np.ones((size,size))).astype(phasemap.roi.dtype)
-        self.roi = scipy.ndimage.binary_opening(self.roi, structure=np.ones((3*size,3*size))).astype(phasemap.roi.dtype)
+        self.roi = scipy.ndimage.binary_closing(phasemap.roi, structure=np.ones((size/2,size/2))).astype(phasemap.roi.dtype)
+        self.roi = scipy.ndimage.binary_erosion(self.roi, structure=np.ones((size,size))).astype(phasemap.roi.dtype)
         self.data *= self.roi
-            
+
         self.vmin = 0.0
         self.vmax = 1.0
         self.cmap = 'gray'
