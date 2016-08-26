@@ -78,27 +78,46 @@ class VmemMap( VideoData ):
 
     def __init__(self, path, cam_type, image_width, image_height, frame_start, frame_end ):
 
-        self.files = sorted(glob(path+"/*.raw*"))
-        assert len(self.files) > 0
-        self.files = self.files[frame_start:frame_end]
-
-        super(VmemMap, self).__init__(len(self.files), image_height, image_width)
-
         self.cam_type = cam_type
-        for i, f in enumerate(self.files):
-            im = np.fromfile(f, dtype=cam_dtype[self.cam_type])
-            im = im.reshape(image_height, image_width)
-            self.data[i, :,:] = im
-        self.im_cam = np.copy(self.data[0,:,:])
+        
+        if "numpy" == self.cam_type:
+            
+            self.files = sorted(glob(path+"/vmem_*.npy"))
+            assert len(self.files) > 0
+            self.files = self.files[frame_start:frame_end]
 
-        im_max = np.max(self.data, axis=0)
-        im_min = np.min(self.data, axis=0)
-        self.im_range = (im_max - im_min) + (im_max == im_min) * 1
-        self.data_org = 2.0 * (im_max - self.data ) / self.im_range - 1.0
-        self.data = np.copy(self.data_org)
+            super(VmemMap, self).__init__(len(self.files), image_height, image_width)
 
-        self.vmin = -1.0
-        self.vmax = 1.0
+            for i, f in enumerate(self.files):
+                im = np.load(f)
+                self.data[i, :,:] = im
+            self.im_cam = np.copy(self.data[0,:,:])            
+            self.vmin = float(np.min(self.data))
+            self.vmax = float(np.max(self.data))
+            
+        else:
+
+            self.files = sorted(glob(path+"/*.raw*"))
+            assert len(self.files) > 0
+            self.files = self.files[frame_start:frame_end]
+
+            super(VmemMap, self).__init__(len(self.files), image_height, image_width)
+
+            for i, f in enumerate(self.files):
+                im = np.fromfile(f, dtype=cam_dtype[self.cam_type])
+                im = im.reshape(image_height, image_width)
+                self.data[i, :,:] = im        
+            self.im_cam = np.copy(self.data[0,:,:])
+            
+            im_max = np.max(self.data, axis=0)
+            im_min = np.min(self.data, axis=0)
+            self.im_range = (im_max - im_min) + (im_max == im_min) * 1
+            self.data_org = 2.0 * (im_max - self.data ) / self.im_range - 1.0
+            self.data = np.copy(self.data_org)
+
+            self.vmin = -1.0
+            self.vmax = 1.0
+            
         self.cmap = bipolar(neutral=0, lutsize=1024)
         return
 
@@ -133,6 +152,7 @@ class VmemMap( VideoData ):
                 cv2.imwrite(wname+'.png', img_disp)
         wname = "selectPoints"
         img = self.im_cam
+
         img /= (np.max(img)/255)
         img = img.astype(np.uint8)
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
