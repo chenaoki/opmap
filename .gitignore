@@ -4,3 +4,6 @@ result*
 sample_session/*
 .ipynb_checkpoints/*
 *.ipynb
+dist/*
+*egg-info*
+build/*

@@ -76,7 +76,7 @@ class VideoData(object):
 
 class VmemMap( VideoData ):
 
-    def __init__(self, path, cam_type, image_width, image_height, frame_start, frame_end ):
+    def __init__(self, path, cam_type, image_width, image_height, frame_start, frame_end):
 
         self.cam_type = cam_type
         
@@ -84,6 +84,7 @@ class VmemMap( VideoData ):
             
             self.files = sorted(glob(path+"/vmem_*.npy"))
             assert len(self.files) > 0
+            if frame_end < 0 : frame_end = len(self.files) + frame_end + 1
             self.files = self.files[frame_start:frame_end]
 
             super(VmemMap, self).__init__(len(self.files), image_height, image_width)
@@ -91,6 +92,7 @@ class VmemMap( VideoData ):
             for i, f in enumerate(self.files):
                 im = np.load(f)
                 self.data[i, :,:] = im
+            print self.data.shape
             self.im_cam = np.copy(self.data[0,:,:])            
             self.vmin = float(np.min(self.data))
             self.vmax = float(np.max(self.data))
