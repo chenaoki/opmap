@@ -26,6 +26,17 @@ class VideoData(object):
         assert frame >= 0 and frame < self.data.shape[0]
         plt.imshow(self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
 
+    def showFrame(self, frame):
+        assert frame >= 0 and frame < self.data.shape[0]
+        plt.imshow(self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
+
+    def showMovie(self):
+        im = plt.imshow(self.data[0, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
+	for i in range(1,self.data.shape[0]):
+		im.set_array(self.data[i,:,:])
+		plt.pause(0.01)
+
+
     def saveMovie(self, path, fps=30, dpi=100, interval=1):
         fig = plt.figure()
         ax = fig.add_subplot(111)
