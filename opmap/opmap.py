@@ -2,13 +2,14 @@ import numpy as np
 from glob import glob
 import os
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from cmap_bipolar import bipolar
 import scipy
 from scipy import signal, ndimage
 from scipy.interpolate import interp1d, splrep, splev
 import pickle
 import cv2
-
+from pylab import tight_layout 
 
 cam_dtype = {'sa4':np.ushort, 'mini':np.ushort, 'max':np.uint8, 'max10':np.ushort}
 
@@ -24,6 +25,23 @@ class VideoData(object):
     def showFrame(self, frame):
         assert frame >= 0 and frame < self.data.shape[0]
         plt.imshow(self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
+
+    def saveMovie(self, path, fps=30, dpi=100, interval=1):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.set_aspect('equal')
+        ax.get_xaxis().set_visible(false)
+        ax.get_yaxis().set_visible(false)
+        im = ax.imshow(np.zeros(),vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
+        im.set_clim([])
+        fig.set_size_inches([5,5])
+        tight_layout()
+        def update_img(n):
+          im.set_data(self.data[n % self.data.shape[0],:,:])
+          return im
+        ani = animation.FuncAnimation(fig, update_img, self.data.shape[0], interval=1)
+        writer = animation.writers['ffmpeg'](fps=fps)
+        ani.save(path, writer=writer, dpi=dpi)
 
     def setROI(self, top=None, bottom=None, left=None, right=None):
         if top is not None :
