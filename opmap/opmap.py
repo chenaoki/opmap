@@ -26,14 +26,9 @@ class VideoData(object):
         assert frame >= 0 and frame < self.data.shape[0]
         plt.imshow(self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
 
-    def showFrame(self, frame):
-        assert frame >= 0 and frame < self.data.shape[0]
-        plt.imshow(self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
-
     def showMovie(self):
         im = plt.imshow(self.data[0, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
 	for i in range(1,self.data.shape[0]):
-		im.set_array(self.data[i,:,:])
 		plt.pause(0.01)
 
 
@@ -41,10 +36,9 @@ class VideoData(object):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.set_aspect('equal')
-        ax.get_xaxis().set_visible(false)
-        ax.get_yaxis().set_visible(false)
-        im = ax.imshow(np.zeros(),vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
-        im.set_clim([])
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        im = ax.imshow(self.data[0,:,:],vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
         fig.set_size_inches([5,5])
         tight_layout()
         def update_img(n):
