@@ -1,0 +1,14 @@
+{
+	"basic" : {
+	    "path" : "./sample_session",
+	    "cam_type" : "sa4",
+	    "image_width" : 512,
+	    "image_height" : 512,
+	    "frame_start" : 0,
+	    "frame_end" : 600
+	},
+	"option" : {
+	    "smooth_size": 3,
+	    "diff_min" : 5
+	}
+}
