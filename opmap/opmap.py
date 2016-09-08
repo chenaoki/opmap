@@ -26,11 +26,6 @@ class VideoData(object):
         assert frame >= 0 and frame < self.data.shape[0]
         plt.imshow(self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
 
-    def showMovie(self):
-        im = plt.imshow(self.data[0, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
-	for i in range(1,self.data.shape[0]):
-		plt.pause(0.01)
-
 
     def saveMovie(self, path, fps=30, dpi=100, interval=1):
         fig = plt.figure()
@@ -42,9 +37,9 @@ class VideoData(object):
         fig.set_size_inches([5,5])
         tight_layout()
         def update_img(n):
-          im.set_data(self.data[n % self.data.shape[0],:,:])
+          im.set_data(self.data[ (interval * n ) % self.data.shape[0],:,:])
           return im
-        ani = animation.FuncAnimation(fig, update_img, self.data.shape[0], interval=1)
+        ani = animation.FuncAnimation(fig, update_img, self.data.shape[0] / interval)
         writer = animation.writers['ffmpeg'](fps=fps)
         ani.save(path, writer=writer, dpi=dpi)
 
@@ -97,52 +92,90 @@ class VideoData(object):
         else:
             plt.savefig(savepath)
 
+class RawCam( VideoData ):
+
+	def __init__(self, path, cam_type, image_width, image_height, frame_start, frame_end):
+
+		self.cam_type = cam_type
+
+		if "numpy" == self.cam_type:
+
+			self.files = sorted(glob(path+"/vmem_*.npy"))
+			assert len(self.files) > 0
+			if frame_end < 0 : frame_end = len(self.files) + frame_end + 1
+			self.files = self.files[frame_start:frame_end]
+
+			super(RawCam, self).__init__(len(self.files), image_height, image_width)
+
+			for i, f in enumerate(self.files):
+				im = np.load(f)
+				self.data[i, :,:] = im
+
+		else:
+
+			self.files = sorted(glob(path+"/*.raw*"))
+			assert len(self.files) > 0
+			self.files = self.files[frame_start:frame_end]
+
+			super(RawCam, self).__init__(len(self.files), image_height, image_width)
+
+			for i, f in enumerate(self.files):
+				im = np.fromfile(f, dtype=cam_dtype[self.cam_type])
+				im = im.reshape(image_height, image_width)
+				self.data[i, :,:] = im
+
+		self.vmin = np.min(self.data)
+		self.vmax = np.max(self.data)
+		self.cmap = 'gray'
+
+		return
+
+	def selectPoints(self):
+
+		points = []
+		def onClick(event, x, y, flag, params):
+			wname, img = params
+			if event == cv2.EVENT_LBUTTONDOWN:
+				img_disp = np.copy(img)
+				points.append((x, y))
+				for i, p in enumerate(points):
+					cv2.circle(img_disp, p, 2, (255,0,0))
+					cv2.putText(img_disp,str(i),(p[0]-5, p[1]-5),cv2.FONT_HERSHEY_PLAIN, 0.6,(255,0,0))
+					cv2.imshow(wname, img_disp)
+					cv2.imwrite(wname+'.png', img_disp)
+
+		wname = "selectPoints"
+		img = self.data[0,:,:]
+
+		assert self.vmin < self.vmax
+		img = (255 * (img - self.vmin) / float(self.vmax - self.vmin))
+		img = img.astype(np.uint8)
+		img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
+		cv2.namedWindow(wname)
+		cv2.setMouseCallback(wname, onClick, [wname, img] )
+		cv2.imshow(wname, img)
+		while cv2.waitKey(0) != 27 : pass
+		cv2.destroyWindow(wname)
+		return np.array(points)
+
+
 class VmemMap( VideoData ):
 
-    def __init__(self, path, cam_type, image_width, image_height, frame_start, frame_end):
+    def __init__(self, rawcam):
 
-        self.cam_type = cam_type
-        
-        if "numpy" == self.cam_type:
-            
-            self.files = sorted(glob(path+"/vmem_*.npy"))
-            assert len(self.files) > 0
-            if frame_end < 0 : frame_end = len(self.files) + frame_end + 1
-            self.files = self.files[frame_start:frame_end]
+    	shape = rawcam.data.shape
+    	super(VmemMap, self).__init__(shape[0], shape[1], shape[2])
 
-            super(VmemMap, self).__init__(len(self.files), image_height, image_width)
+        im_max = np.max(rawcam.data, axis=0)
+        im_min = np.min(rawcam.data, axis=0)
+        self.im_range = (im_max - im_min) + (im_max == im_min) * 1
+        self.data_org = 2.0 * (im_max - rawcam.data ) / self.im_range - 1.0
+        self.data = np.copy(self.data_org)
+        self.diff_max =np.iinfo(cam_dtype[rawcam.cam_type]).max
 
-            for i, f in enumerate(self.files):
-                im = np.load(f)
-                self.data[i, :,:] = im
-            print self.data.shape
-            self.im_cam = np.copy(self.data[0,:,:])            
-            self.vmin = float(np.min(self.data))
-            self.vmax = float(np.max(self.data))
-            
-        else:
-
-            self.files = sorted(glob(path+"/*.raw*"))
-            assert len(self.files) > 0
-            self.files = self.files[frame_start:frame_end]
-
-            super(VmemMap, self).__init__(len(self.files), image_height, image_width)
-
-            for i, f in enumerate(self.files):
-                im = np.fromfile(f, dtype=cam_dtype[self.cam_type])
-                im = im.reshape(image_height, image_width)
-                self.data[i, :,:] = im        
-            self.im_cam = np.copy(self.data[0,:,:])
-            
-            im_max = np.max(self.data, axis=0)
-            im_min = np.min(self.data, axis=0)
-            self.im_range = (im_max - im_min) + (im_max == im_min) * 1
-            self.data_org = 2.0 * (im_max - self.data ) / self.im_range - 1.0
-            self.data = np.copy(self.data_org)
-
-            self.vmin = -1.0
-            self.vmax = 1.0
-            
+        self.vmin = -1.0
+        self.vmax = 1.0            
         self.cmap = bipolar(neutral=0, lutsize=1024)
         return
 
@@ -151,7 +184,7 @@ class VmemMap( VideoData ):
         if diff_min is None :
           diff_min = 0
         if diff_max is None :
-          diff_max = np.iinfo(cam_dtype[self.cam_type]).max
+          diff_max = self.diff_max
         self.roi *= (self.im_range>=diff_min)*1
         self.roi *= (self.im_range<=diff_max)*1
         self.data = self.data_org*self.roi
@@ -162,31 +195,6 @@ class VmemMap( VideoData ):
         for frame in range( self.data.shape[0]):
             self.data[frame,:,:] = ndimage.gaussian_filter(self.data[frame,:,:], sigma = size)
         return
-
-    def selectPoints(self):
-        points = []
-        def onClick(event, x, y, flag, params):
-            wname, img = params
-            if event == cv2.EVENT_LBUTTONDOWN:
-                img_disp = np.copy(img)
-                points.append((x, y))
-                for i, p in enumerate(points):
-                    cv2.circle(img_disp, p, 2, (255,0,0))
-                    cv2.putText(img_disp,str(i),(p[0]-5, p[1]-5),cv2.FONT_HERSHEY_PLAIN, 0.6,(255,0,0))
-                cv2.imshow(wname, img_disp)
-                cv2.imwrite(wname+'.png', img_disp)
-        wname = "selectPoints"
-        img = self.im_cam
-
-        img /= (np.max(img)/255)
-        img = img.astype(np.uint8)
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-        cv2.namedWindow(wname)
-        cv2.setMouseCallback(wname, onClick, [wname, img] )
-        cv2.imshow(wname, img)
-        while cv2.waitKey(0) != 27 : pass
-        cv2.destroyWindow(wname)
-        return np.array(points)
 
 class PhaseMap( VideoData ):
 
