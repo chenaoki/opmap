@@ -1,0 +1,13 @@
+{
+	"vmem" : {
+	    "path" : "C:/Users/MassieY/Desktop/C001S0002",
+	    "cam_type" : "sa4",
+	    "image_width" : 256,
+	    "image_height" : 256,
+	    "frame_start" : 600,
+	    "frame_end" : 800
+	},
+	"option" : {
+	    "purkinje_end": 700 
+	}
+}

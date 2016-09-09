@@ -9,16 +9,20 @@ diff_min = params["option"]["diff_min"]
 smooth_size = params["option"]["smooth_size"]
 interval_time = params["option"]["interval"]
 flg_plot = True if params["option"]["plot"] > 0 else False
+flg_imsave = True if params["option"]["save_image"] > 0 else False
 saveDir = param_vmem["path"]+"/result/experiment/"
 
-if not os.path.exists(saveDir):
-	os.makedirs(saveDir)
+if not os.path.exists(saveDir+"img/"):
+	os.makedirs(saveDir+"img/")
 
 cam = RawCam(**param_vmem)
 vmem = VmemMap(cam)
 vmem.setDiffRange(diff_min=diff_min)
 if smooth_size > 0 : vmem.smooth(size=smooth_size)
 vmem.saveMovie(saveDir + "vmem.mp4", interval=interval_time)
+
+if flg_imsave:
+	vmem.saveImage(saveDir + "img/", img_type = 'png')
 if flg_plot:
 	points = cam.selectPoints(saveDir+"selectPoints.png")
 	vmem.plot(points, savepath = saveDir + "plot.png")
