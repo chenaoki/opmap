@@ -1,15 +1,16 @@
 {
 	"basic" : {
-	    "path" : "C:/Users/Tomii/Desktop/Ushida/ExperimentData/20160907-1/C001H001S0001",
+	    "path" : "C:/Users/MassieY/Desktop/C001S0002",
 	    "cam_type" : "sa4",
-	    "image_width" : 512,
-	    "image_height" : 512,
+	    "image_width" : 256,
+	    "image_height" : 256,
 	    "frame_start" : 0,
 	    "frame_end" : 400
 	},
 	"option" : {
 	    "smooth_size": 0,
 	    "diff_min" : 5,
-	    "interval" : 5
+	    "interval" : 5,
+	    "plot" : 1
 	}
 }
