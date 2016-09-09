@@ -130,7 +130,7 @@ class RawCam( VideoData ):
 
 		return
 
-	def selectPoints(self):
+	def selectPoints(self, savepath="./selectPoints.png"):
 
 		points = []
 		def onClick(event, x, y, flag, params):
@@ -142,7 +142,7 @@ class RawCam( VideoData ):
 					cv2.circle(img_disp, p, 2, (255,0,0))
 					cv2.putText(img_disp,str(i),(p[0]-5, p[1]-5),cv2.FONT_HERSHEY_PLAIN, 0.6,(255,0,0))
 					cv2.imshow(wname, img_disp)
-					cv2.imwrite(wname+'.png', img_disp)
+					cv2.imwrite(savepath, img_disp)
 
 		wname = "selectPoints"
 		img = self.data[0,:,:]
