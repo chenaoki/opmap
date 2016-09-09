@@ -3,7 +3,7 @@ import os
 from opmap.opmap import VmemMap, RawCam
 import json
 
-with open("experiment.json", "r") as f : params = json.load(f)
+with open("param.json", "r") as f : params = json.load(f)
 param_vmem = params["basic"]
 diff_min = params["option"]["diff_min"]
 smooth_size = params["option"]["smooth_size"]
