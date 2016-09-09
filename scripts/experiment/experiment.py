@@ -9,7 +9,7 @@ diff_min = params["option"]["diff_min"]
 smooth_size = params["option"]["smooth_size"]
 interval_time = params["option"]["interval"]
 flg_plot = True if params["option"]["plot"] > 0 else False
-saveDir = param_vmem["path"]+"/result/"
+saveDir = param_vmem["path"]+"/result/experiment/"
 
 if not os.path.exists(saveDir):
 	os.makedirs(saveDir)
