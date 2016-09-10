@@ -77,16 +77,17 @@ class VideoData(object):
     def plot(self, points, start=None, end=None, filter_size=None, savepath = None):
         if start is None : start = 0
         if end is None : end = self.data.shape[0]
+        fig = plt.figure()
         for i, p in enumerate(points):
             assert len(p) == 2
             x, y = p
             assert y >= 0 and y < self.data.shape[1]
             assert x >= 0 and x < self.data.shape[2]
-            plt.subplot(len(points),1,i+1)
+            ax = fig.add_subplot(len(points),1,i+1)
             ts = self.data[start:end, y, x]
             if filter_size is not None:
                 ts = signal.savgol_filter(ts, filter_size, 3)
-            plt.plot(ts)
+            ax.plot(ts)
         if savepath is None:
             plt.show()
         else:
