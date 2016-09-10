@@ -24,7 +24,7 @@
 1. experimentフォルダの中にあるparam.jsonを書き換え、保存 (Ctrl+S)
 2. experinment.pyをダブルクリック
 3. plotを選択した場合、グレースケールで表示されたカメラ画像から膜電位を確認したい点を選択し、Escキーを押して終了
-4. パラメータで指定したpathの中に作成されたresultフォルダを確認
+4. パラメータで指定したpathの中に作成されたresult/experimentフォルダを確認
 
 
 ## 処理結果
