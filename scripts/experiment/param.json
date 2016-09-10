@@ -1,6 +1,6 @@
 {
 	"basic" : {
-	    "path" : "C:/Users/MassieY/Documents/C001S0002",
+	    "path" : "C:/Users/MassieY/Desktop/C001S0002",
 	    "cam_type" : "sa4",
 	    "image_width" : 256,
 	    "image_height" : 256,
@@ -10,8 +10,8 @@
 	"option" : {
 	    "smooth_size": 0,
 	    "diff_min" : 0,
-	    "interval" : 5,
-	    "save_image" : 1,
-	    "plot" : 0
+	    "interval" : 10,
+	    "save_image" : 0,
+	    "plot" : 1
 	}
 }
