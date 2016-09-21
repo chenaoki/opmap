@@ -11,7 +11,12 @@ import pickle
 import cv2
 from pylab import tight_layout 
 
-cam_dtype = {'sa4':np.ushort, 'mini':np.ushort, 'max':np.uint8, 'max10':np.ushort}
+cam_dtype={
+    'sa4':np.ushort,
+    'mini':np.ushort,
+    'max':np.uint8,
+    'max10':np.ushort
+}
 
 class VideoData(object):
 
@@ -97,9 +102,7 @@ class RawCam( VideoData ):
 
 	def __init__(self, path, cam_type, image_width, image_height, frame_start, frame_end):
 
-		self.cam_type = cam_type
-
-		if "numpy" == self.cam_type:
+		if "numpy" == cam_type:
 
 			self.files = sorted(glob(path+"/vmem_*.npy"))
 			assert len(self.files) > 0
@@ -121,7 +124,7 @@ class RawCam( VideoData ):
 			super(RawCam, self).__init__(len(self.files), image_height, image_width)
 
 			for i, f in enumerate(self.files):
-				im = np.fromfile(f, dtype=cam_dtype[self.cam_type])
+				im = np.fromfile(f, dtype=cam_dtype[cam_type])
 				im = im.reshape(image_height, image_width)
 				self.data[i, :,:] = im
 
@@ -173,7 +176,7 @@ class VmemMap( VideoData ):
         self.im_range = (im_max - im_min) + (im_max == im_min) * 1
         self.data_org = 2.0 * (im_max - rawcam.data ) / self.im_range - 1.0
         self.data = np.copy(self.data_org)
-        self.diff_max =np.iinfo(cam_dtype[rawcam.cam_type]).max
+        self.diff_max = rawcam.vmax - rawcam.vmin
 
         self.vmin = -1.0
         self.vmax = 1.0            
