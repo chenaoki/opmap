@@ -276,3 +276,23 @@ class PhaseVarianceMap( VideoData ):
         self.vmin = 0.0
         self.vmax = 1.0
         self.cmap = 'gray'
+
+class CoreMap( VideoData ):
+
+  def __init__(self, pvmap, threshold=0.8):
+    assert threshold >= 0.0 and threshold <= 1.0
+    self.threshold = threshold
+
+    super(CoreMap, self).__init__(*pvmap.data.shape)
+
+    self.roi = pvmap.roi
+    self.data, self.coreNum = ndimage.label((pvmap.data>self.threshold)*1) 
+
+    self.vmin = 0
+    self.vmax = np.max(self.data) 
+    self.cmap = plt.cm.spectral 
+
+  def getFrameCore(self, frame):
+    im = (self.data[frame,:,:]>0)*1
+    im_label, n = ndimage.label(im) 
+    return im_label, ndimage.measurements.center_of_mass(im, im_label, range(1,n+1))
