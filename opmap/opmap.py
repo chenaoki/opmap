@@ -177,6 +177,8 @@ class VmemMap( VideoData ):
         self.data_org = 2.0 * (im_max - rawcam.data ) / self.im_range - 1.0
         self.data = np.copy(self.data_org)
         self.diff_max = rawcam.vmax - rawcam.vmin
+        self.roi_org = np.copy(rawcam.roi)
+        self.roi = np.copy(rawcam.roi)
 
         self.vmin = -1.0
         self.vmax = 1.0            
@@ -184,7 +186,7 @@ class VmemMap( VideoData ):
         return
 
     def setDiffRange(self, diff_min=None, diff_max=None):
-        self.roi = 1.0 # reset
+        self.roi = np.copy(self.roi_org) # reset
         if diff_min is None :
           diff_min = 0
         if diff_max is None :
@@ -272,7 +274,7 @@ class PhaseVarianceMap( VideoData ):
             im_sin = signal.convolve2d(im_sin, kernel, mode = 'same', boundary = 'fill')
             self.data[frame, :, :] = 1.0 - np.abs( im_cos + 1j * im_sin )
 
-        self.roi = scipy.ndimage.binary_closing(phasemap.roi, structure=np.ones((size/2,size/2))).astype(phasemap.roi.dtype)
+        self.roi = np.copy(phasemap.roi)
         self.roi = scipy.ndimage.binary_erosion(self.roi, structure=np.ones((size,size))).astype(phasemap.roi.dtype)
         self.data *= self.roi
 
