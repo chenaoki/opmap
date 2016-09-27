@@ -1,15 +1,18 @@
 import sys
 import os
+import matplotlib as mpl
+mpl.use('Agg')
 from opmap.opmap import VmemMap, RawCam,PhaseMap,PhaseVarianceMap
 import json
 import glob
 
-if len(sys.argv) < 2:
+if len(sys.argv) < 3:
 	print 'Usage : ',
-	print 'python batchRun.py [target directory]'
+	print 'python batchRun.py [target directory] [user name]'
 	exit()
 
 p = sys.argv[1]
+user = sys.argv[2]
 dirs = glob.glob(p+"/*")
 
 for a in dirs:
@@ -19,7 +22,9 @@ for a in dirs:
         diff_min = params["option"]["diff_min"]
 	smooth_size = params["option"]["smooth_size"]
 	
-	saveDir = a.replace("ExperimentData", "AnalysisResult")
+	saveDir = a.replace("ExperimentData", "AnalysisResult/" + user)
+        if not os.path.exists(saveDir):
+                os.makedirs(saveDir)
 	print saveDir
 
 	param_cam["path"] = a
@@ -28,13 +33,11 @@ for a in dirs:
 
         vmem.setDiffRange(diff_min=diff_min)
 
-        if True:
-            import matplotlib.pyplot as plt
-            plt.imsave(
-             '{0}/roi.png'.format(savedir),
+        import matplotlib.pyplot as plt
+        plt.imsave(
+                '{0}/roi.png'.format(saveDir),
                 vmem.roi, vmin=0.0, vmax=1.0, cmap='gray'
-            )
-            break
+        )
 
         if smooth_size > 0 : vmem.smooth(size=smooth_size)
 	
