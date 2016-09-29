@@ -31,7 +31,6 @@ class VideoData(object):
         assert frame >= 0 and frame < self.data.shape[0]
         plt.imshow(self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
 
-
     def saveMovie(self, path, fps=30, dpi=100, interval=1):
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -48,7 +47,7 @@ class VideoData(object):
         writer = animation.writers['ffmpeg'](fps=fps)
         ani.save(path, writer=writer, dpi=dpi)
 
-    def setROI(self, top=None, bottom=None, left=None, right=None):
+    def setRectROI(self, top=None, bottom=None, left=None, right=None):
         if top is not None :
             assert top >= 0 and top < self.roi.shape[0]
             self.roi[:top, :] = 0
@@ -61,6 +60,26 @@ class VideoData(object):
         if right is not None :
             assert right >= 0 and right < self.roi.shape[1]
             self.roi[:, right:] = 0
+        self.data *= self.roi
+
+    def setIntROI(self, val_min=None, val_max=None):
+        if val_min is not None:
+            self.roi *= (np.min(self.data, axis=0)>val_min)*1
+        if val_max is not None:
+            self.roi *= (np.max(self.data, axis=0)<val_max)*1
+        self.data *= self.roi
+    
+    def morphROI(self, closing=None, erosion=None):
+        if closing : 
+            self.roi = scipy.ndimage.binary_closing(
+                self.roi, 
+                structure=np.ones((closing,closing))).astype(self.roi.dtype
+            )
+        if erosion : 
+            self.roi = scipy.ndimage.binary_erosion(
+                self.roi, 
+                structure=np.ones((erosion,erosion))).astype(self.roi.dtype
+            )
         self.data *= self.roi
 
     def showROI(self):
@@ -163,7 +182,6 @@ class RawCam( VideoData ):
 		cv2.destroyWindow(wname)
 		return np.array(points)
 
-
 class VmemMap( VideoData ):
 
     def __init__(self, rawcam):
@@ -175,10 +193,10 @@ class VmemMap( VideoData ):
         im_min = np.min(rawcam.data, axis=0)
         self.im_range = (im_max - im_min) + (im_max == im_min) * 1
         self.data_org = 2.0 * (im_max - rawcam.data ) / self.im_range - 1.0
-        self.data = np.copy(self.data_org)
         self.diff_max = rawcam.vmax - rawcam.vmin
         self.roi_org = np.copy(rawcam.roi)
         self.roi = np.copy(rawcam.roi)
+        self.data = self.data_org*self.roi
 
         self.vmin = -1.0
         self.vmax = 1.0            
