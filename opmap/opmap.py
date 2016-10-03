@@ -18,6 +18,10 @@ cam_dtype={
     'max10':np.ushort
 }
 
+def makeMovie(path, img_type='png'):
+      os.system("ffmpeg -r 15 -y -i {0}/%06d.{1} -c:v libx264 -pix_fmt yuv420p -qscale 0 {0}.mp4".format(path, img_type))
+
+
 class VideoData(object):
 
     def __init__(self, length, height, width ):

@@ -5,7 +5,7 @@ import matplotlib
 import sys
 import os
 
-from opmap.opmap import VmemMap, RawCam
+from opmap.opmap import VmemMap, RawCam, makeMovie
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
@@ -167,12 +167,14 @@ class setParam(QWidget):
       try:
         assert self.path is not ''
         saveDir = self.path + "/result/experiment/"
+        self.cam_type    = str(self.combo1.currentText())
+        self.image_size  = int(str(self.combo2.currentText()))
         self.frame_start = int(str(self.edit1.text()))
         self.frame_end   = int(str(self.edit2.text()))
         self.diff_min    = int(str(self.edit3.text()))
         self.smooth_size = int(str(self.edit4.text()))
         self.interval    = int(str(self.edit5.text()))
-        
+
         cam = RawCam(
             path = self.path,
             cam_type = self.cam_type,
@@ -188,7 +190,7 @@ class setParam(QWidget):
 
         if int(self.flg_imsave):
           vmem.saveImage(saveDir + "vmem", skip=self.interval, img_type = 'png')
-          os.system("ffmpeg -r 15 -y -i {0}/%06d.png -c:v libx264 -pix_fmt yuv420p -qscale 0 {0}.mp4".format(saveDir+"vmem"))
+          makeMovie(saveDir+"vmem", img_type="png")
 
         if int(self.flg_plot):
           points = cam.selectPoints(saveDir+"selectPoints.png")
@@ -196,11 +198,6 @@ class setParam(QWidget):
 
         QMessageBox.information(None,"",u"処理完了！　保存フォルダ:\n"+saveDir)
 
-      except ValueError:
-        err = QErrorMessage()
-        err.showMessage("Invalid value")
-        err.exec_()
-        return
       except:
         err = QErrorMessage()
         err.showMessage("Unexpected error:{0}".format(sys.exc_info()))
