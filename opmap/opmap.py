@@ -44,8 +44,10 @@ class VideoData(object):
           im.set_data(self.data[ (interval * n ) % self.data.shape[0],:,:])
           return im
         ani = animation.FuncAnimation(fig, update_img, self.data.shape[0] / interval)
+        #writer = animation.writers['ffmpeg'](fps=fps, codec='avi')
         writer = animation.writers['ffmpeg'](fps=fps)
-        ani.save(path, writer=writer, dpi=dpi)
+        ani.save(path, writer=writer)
+        #ani.save(path, writer=writer, dpi=dpi)
 
     def setRectROI(self, top=None, bottom=None, left=None, right=None):
         if top is not None :
@@ -85,14 +87,15 @@ class VideoData(object):
     def showROI(self):
         plt.imshow(self.roi, vmin=0.0, vmax=1.0, cmap='gray')
 
-    def saveImage(self, savedir, img_type = 'png'):
+    def saveImage(self, savedir, img_type = 'png', skip=1):
         if not os.path.exists(savedir):
             os.makedirs(savedir)
         for frame in range(self.data.shape[0]):
-            plt.imsave(
-                '{0}/{1:0>6}.{2}'.format(savedir, frame, img_type),
-                self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap
-            )
+            if frame % skip == 0:
+                plt.imsave(
+                    '{0}/{1:0>6}.{2}'.format(savedir, frame/skip, img_type),
+                    self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap
+                )
         plt.imsave(
          '{0}/roi.{1}'.format(savedir, img_type),
             self.roi, vmin=0.0, vmax=1.0, cmap='gray'
