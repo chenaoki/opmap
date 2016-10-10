@@ -7,6 +7,7 @@ from cmap_bipolar import bipolar
 import scipy
 from scipy import signal, ndimage
 from scipy.interpolate import interp1d, splrep, splev
+from scipy.ndimage.measurements import center_of_mass
 import pickle
 import cv2
 from pylab import tight_layout 
@@ -322,7 +323,14 @@ class CoreMap( VideoData ):
     self.vmax = np.max(self.data) 
     self.cmap = plt.cm.spectral 
 
-  def getFrameCore(self, frame):
-    im = (self.data[frame,:,:]>0)*1
-    im_label, n = ndimage.label(im) 
-    return im_label, ndimage.measurements.center_of_mass(im, im_label, range(1,n+1))
+  def getCoreLog(self):
+    log_core = []
+    for frame in range(self.data.shape[0]):
+      im_label = self.data[frame,:,:]
+      im_bin = (im_label>0)*1
+      im_label_tmp, n = ndimage.label(im_bin)
+      coms = center_of_mass(im_bin, im_label_tmp, range(1,n+1))
+      for i in range(1, n+1):
+        label=np.max(((im_label_tmp==i)*1)*im_label)
+        log_core.append((frame, label, coms[i-1][0], coms[i-1][1]))
+    return log_core 
