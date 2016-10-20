@@ -1,17 +1,17 @@
 {
-	"basic" : {
-	    "path" : "C:/Users/MassieY/Desktop/C001S0002",
-	    "cam_type" : "sa4",
-	    "image_width" : 256,
-	    "image_height" : 256,
-	    "frame_start" : 0,
-	    "frame_end" : 2000
-	},
-	"option" : {
-	    "smooth_size": 0,
-	    "diff_min" : 0,
-	    "interval" : 10,
-	    "save_image" : 0,
-	    "plot" : 1
-	}
+    "option": {
+        "map": 1, 
+        "interval": 10, 
+        "diff_min": 10, 
+        "smooth_size": 0, 
+        "plot": 0
+    }, 
+    "basic": {
+        "frame_end": 800, 
+        "image_width": 512, 
+        "cam_type": "sa4", 
+        "image_height": 512, 
+        "frame_start": 0, 
+        "path": "/Users/tomii/tmp/ExperimentData/20160907-3/C001H001S0006"
+    }
 }

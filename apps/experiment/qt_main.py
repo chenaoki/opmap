@@ -4,38 +4,55 @@ import matplotlib
 
 import sys
 import os
+import json
+from experiment import experiment
 
 from opmap.opmap import VmemMap, RawCam, makeMovie
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
-class setParam(QWidget):
+class ExperimentWidget(QWidget):
+  cam_types = ["sa4", "max"]
+  image_sizes = ["128", "256", "512"]
+
+  def loadParam(self):
+      with open("param.json","r") as f: 
+          params = json.load(f)
+          self.path = params["basic"]["path"]
+          self.combo1.setCurrentIndex(
+                  self.cam_types.index(str(params["basic"]["cam_type"]))) 
+          self.combo2.setCurrentIndex(
+                  self.image_sizes.index(str(params["basic"]["image_width"])))
+          self.edit1.setText( str(params["basic"]["frame_start"]  ))
+          self.edit2.setText( str(params["basic"]["frame_end"]    ))
+          self.edit3.setText( str(params["option"]["diff_min"]    ))
+          self.edit4.setText( str(params["option"]["smooth_size"] ))
+          self.edit5.setText( str(params["option"]["interval"]    ))
+          self.cb_1.setCheckState( Qt.Checked if params["option"]["map"]  != 0 else Qt.Unchecked)
+          self.cb_2.setCheckState( Qt.Checked if params["option"]["plot"] != 0 else Qt.Unchecked)
+  
+  def saveParam(self):
+      params = {"basic":{}, "option":{}} 
+      params["basic"]["path"]         = self.path
+      params["basic"]["cam_type"]     = str(self.combo1.currentText())
+      params["basic"]["image_width"]  = int(self.combo2.currentText())
+      params["basic"]["image_height"] = int(self.combo2.currentText())
+      params["basic"]["frame_start"]  = int(str(self.edit1.text()))
+      params["basic"]["frame_end"]    = int(str(self.edit2.text()))
+      params["option"]["diff_min"]    = int(str(self.edit3.text()))
+      params["option"]["smooth_size"] = int(str(self.edit4.text()))
+      params["option"]["interval"]    = int(str(self.edit5.text()))
+      params["option"]["map"]         = 1 if self.cb_1.isChecked() else 0  
+      params["option"]["plot"]        = 1 if self.cb_2.isChecked() else 0 
+      with open("param.json","w") as f: json.dump( params, f, indent=4)
   
   def __init__(self):
+    self.path = ""
 
-    super(setParam, self).__init__()
+    super(ExperimentWidget, self).__init__()
 
     self.setGeometry(300, 300, 350, 300)
     self.setWindowTitle(u'パラメータ設定')
-
-    cam_label         = QLabel(u'カメラタイプ　　　　　　　')
-    image_label       = QLabel(u'画像サイズ　　　　　　　　')
-    start_label       = QLabel(u'開始フレーム　　　　　　　')
-    end_label         = QLabel(u'終了フレーム　　　　　　　')
-    diff_min_label    = QLabel(u'要求変化幅　　　　　　　　')
-    smooth_size_label = QLabel(u'平滑化サイズ　　　　　　　')
-    interval_label    = QLabel(u'保存フレーム間隔　　　　　')
-    plot_label        = QLabel(u'膜電位波形　　　　　　　　')
-    imsave_label      = QLabel(u'膜電位マップ　　　　　　　')
-    self.cam_type = 'sa4'
-    self.image_size = 256
-    self.frame_start = 0
-    self.frame_end = 1900
-    self.diff_min = 0
-    self.smooth_size = 0
-    self.interval = 1
-    self.flg_plot = 0
-
 
     grid = QVBoxLayout()
 
@@ -48,110 +65,69 @@ class setParam(QWidget):
 
     # cam_type layout
     layout1 = QHBoxLayout()
-    layout1.addWidget(cam_label)
+    layout1.addWidget(QLabel(u'カメラタイプ　　　　　　　'))
     self.combo1 = QComboBox()
-    self.combo1.addItem("sa4")
-    self.combo1.addItem("max")
-    self.combo1.addItem("max10")
-    self.combo1.addItem("mini")
-    self.combo1.setCurrentIndex(0)
+    for cam_type in self.cam_types: self.combo1.addItem(cam_type)
     layout1.addWidget(self.combo1)
     basicbox.addLayout(layout1)
 
     # image_size layout
     layout2= QHBoxLayout()
-    layout2.addWidget(image_label)
+    layout2.addWidget(QLabel(u'画像サイズ　　　　　　　　'))
     self.combo2 = QComboBox()
-    self.combo2.addItem("128")
-    self.combo2.addItem("256")
-    self.combo2.addItem("512")
-    self.combo2.setCurrentIndex(1)
+    for image_size in self.image_sizes: self.combo2.addItem(image_size)
     layout2.addWidget(self.combo2)
     basicbox.addLayout(layout2)
 
     # frame_start layout
     layout3 = QHBoxLayout()
-    layout3.addWidget(start_label)
+    layout3.addWidget(QLabel(u'開始フレーム　　　　　　　'))
     self.edit1 = QLineEdit()
-    self.edit1.setText(str(0))
     layout3.addWidget(self.edit1)
     basicbox.addLayout(layout3)
 
     # frame_end layout
     layout4 = QHBoxLayout()
-    layout4.addWidget(end_label)
+    layout4.addWidget(QLabel(u'終了フレーム　　　　　　　'))
     self.edit2 = QLineEdit()
-    self.edit2.setText(str(400))
     layout4.addWidget(self.edit2)
     basicbox.addLayout(layout4)
-    
+
     # basic layout
     self.groupBox1.setLayout(basicbox)
     grid.addWidget(self.groupBox1)
 
     # diff_min layout
     layout1 = QHBoxLayout()
-    layout1.addWidget(diff_min_label)
+    layout1.addWidget(QLabel(u'要求変化幅　　　　　　　　'))
     self.edit3 = QLineEdit()
-    self.edit3.setText(str(10))
     layout1.addWidget(self.edit3)
     optionbox.addLayout(layout1)
 
     # smooth_size layout
     layout2= QHBoxLayout()
-    layout2.addWidget(smooth_size_label)
+    layout2.addWidget(QLabel(u'平滑化サイズ　　　　　　　'))
     self.edit4 = QLineEdit()
-    self.edit4.setText(str(0))
     layout2.addWidget(self.edit4)
     optionbox.addLayout(layout2)
 
     # interval layout
     layout3 = QHBoxLayout()
-    layout3.addWidget(interval_label)
+    layout3.addWidget(QLabel(u'保存フレーム間隔　　　　　'))
     self.edit5 = QLineEdit()
-    self.edit5.setText(str(1))
     layout3.addWidget(self.edit5)
     optionbox.addLayout(layout3)
 
-    # flg_plot layout
-    layout4 = QHBoxLayout()
-    layout4.addWidget(plot_label)
-    self.b1 = QRadioButton(u"表示しない")
-    self.b2 = QRadioButton(u"表示する")
-    self.group1 = QButtonGroup()
-    self.group1.addButton(self.b1, 1)
-    self.group1.addButton(self.b2, 2)
-    def off_plot():
-        self.flg_plot = 0
-    def on_plot():
-        self.flg_plot = 1
-    self.b1.clicked.connect(lambda: off_plot())
-    self.b2.clicked.connect(lambda: on_plot())
-    layout4.addWidget(self.b1)
-    layout4.addWidget(self.b2)
-    self.b1.setChecked(True)
-    optionbox.addLayout(layout4)
-
-    # flg_imsave layout
-    layout5 = QHBoxLayout()
-    layout5.addWidget(imsave_label)
-    self.b3 = QRadioButton(u"保存しない")
-    self.b4 = QRadioButton(u"保存する")
-    self.group2 = QButtonGroup()
-    self.group2.addButton(self.b3, 1)
-    self.group2.addButton(self.b4, 2)
-    def off_imsave():
-        self.flg_imsave = 0
-    def on_imsave():
-        self.flg_imsave = 1
-    self.b3.clicked.connect(lambda: off_imsave())
-    self.b4.clicked.connect(lambda: on_imsave())
-    self.b4.setChecked(True)
-    on_imsave()
-    layout5.addWidget(self.b3)
-    layout5.addWidget(self.b4)
-    optionbox.addLayout(layout5)
-
+    # flg_map / flg_plot
+    layout = QHBoxLayout()
+    self.cb_1 = QCheckBox(u"膜電位マップ保存", self)
+    self.cb_1.setTristate(False)
+    layout.addWidget(self.cb_1)
+    self.cb_2 = QCheckBox(u"膜電位波形保存", self)
+    self.cb_2.setTristate(False)
+    layout.addWidget(self.cb_2)
+    optionbox.addLayout(layout)
+    
     # option layout
     self.groupBox2.setLayout(optionbox)
     grid.addWidget(self.groupBox2)
@@ -160,41 +136,15 @@ class setParam(QWidget):
     
       self.path = str(QFileDialog.getExistingDirectory(None,
           u'セッションフォルダを選択',
-          '',
+          self.path,
           QFileDialog.ShowDirsOnly))
+      saveDir = self.path + "/result/experiment/"
       print self.path
 
       try:
-        assert self.path is not ''
-        saveDir = self.path + "/result/experiment/"
-        self.cam_type    = str(self.combo1.currentText())
-        self.image_size  = int(str(self.combo2.currentText()))
-        self.frame_start = int(str(self.edit1.text()))
-        self.frame_end   = int(str(self.edit2.text()))
-        self.diff_min    = int(str(self.edit3.text()))
-        self.smooth_size = int(str(self.edit4.text()))
-        self.interval    = int(str(self.edit5.text()))
 
-        cam = RawCam(
-            path = self.path,
-            cam_type = self.cam_type,
-            image_width=self.image_size,
-            image_height=self.image_size,
-            frame_start = self.frame_start,
-            frame_end = self.frame_end
-        )
-        vmem = VmemMap(cam)
-        vmem.setDiffRange(diff_min=self.diff_min)
-        if self.smooth_size > 0 : vmem.smooth(size=self.smooth_size)
-        #vmem.saveMovie(saveDir + "vmem.mp4", interval=self.interval)
-
-        if int(self.flg_imsave):
-          vmem.saveImage(saveDir + "vmem", skip=self.interval, img_type = 'png')
-          makeMovie(saveDir+"vmem", img_type="png")
-
-        if int(self.flg_plot):
-          points = cam.selectPoints(saveDir+"selectPoints.png")
-          vmem.plot(points, savepath = saveDir + "plot.png")
+        self.saveParam()
+        experiment(path=self.path, saveDir=saveDir, param_file="./param.json")
 
         QMessageBox.information(None,"",u"処理完了！　保存フォルダ:\n"+saveDir)
 
@@ -204,8 +154,6 @@ class setParam(QWidget):
         err.exec_()
         return
 
-    #btn = QPushButton("終了", self)
-    #btn.clicked.connect(QCoreApplication.instance().quit)
     btn = QPushButton(u'セッションフォルダを選んで実行', self)
     btn.clicked.connect(lambda: execute())
     layout1 = QHBoxLayout()
@@ -216,9 +164,10 @@ class setParam(QWidget):
     grid.addWidget(self.groupBox3)
     self.setLayout(grid)
 
+    self.loadParam()
     self.show()
 
 app = QApplication(sys.argv)
-a = setParam()
+w = ExperimentWidget()
 sys.exit(app.exec_())
 
