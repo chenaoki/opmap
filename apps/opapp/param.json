@@ -1,0 +1,29 @@
+{
+  "basic" : {
+      "cam_type" : "sa4",
+      "image_width" : 512,
+      "image_height" : 512,
+      "frame_start" : 0,
+      "frame_end" : 600
+  },
+  "menu" : {
+      "cam" : 1,
+      "vmem" : 1,
+      "pmap" : 1,
+      "pvmap" : 1,
+      "core" : 5,
+      "core_log" : 1,
+      "integrate" : 0
+  },
+  "option" : {
+      "roi_rect" : {
+        "top" : 64
+      },
+      "save_int" : 1,
+      "smooth_size": 9,
+      "diff_min" : 20,
+      "intensity_min" : 100, 
+      "pv_win" : 9,
+      "core_thre" : 0.6
+  }
+}
