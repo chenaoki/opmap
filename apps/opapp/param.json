@@ -1,29 +1,30 @@
 {
-  "basic" : {
-      "cam_type" : "sa4",
-      "image_width" : 512,
-      "image_height" : 512,
-      "frame_start" : 0,
-      "frame_end" : 600
-  },
-  "menu" : {
-      "cam" : 1,
-      "vmem" : 1,
-      "pmap" : 1,
-      "pvmap" : 1,
-      "core" : 5,
-      "core_log" : 1,
-      "integrate" : 0
-  },
-  "option" : {
-      "roi_rect" : {
-        "top" : 64
-      },
-      "save_int" : 1,
-      "smooth_size": 9,
-      "diff_min" : 20,
-      "intensity_min" : 100, 
-      "pv_win" : 9,
-      "core_thre" : 0.6
-  }
+    "menu": {
+        "core": 1, 
+        "cam": 1, 
+        "pvmap": 1, 
+        "vmem": 1, 
+        "pmap": 1, 
+        "integrate": 3, 
+        "core_log": 0
+    }, 
+    "option": {
+        "pv_win": 9, 
+        "diff_min": 0, 
+        "roi_rect": {
+            "top": 64
+        }, 
+        "save_int": 5, 
+        "core_thre": 0.6, 
+        "intensity_min": 0, 
+        "smooth_size": 0
+    }, 
+    "basic": {
+        "frame_end": 400, 
+        "image_width": 256, 
+        "cam_type": "max", 
+        "image_height": 256, 
+        "frame_start": 0, 
+        "path": ""
+    }
 }
