@@ -4,10 +4,12 @@ import matplotlib
 
 import sys
 import os
+import json
 
 from opmap.opmap import RawCam, VmemMap, PhaseMap, PhaseVarianceMap, makeMovie
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+from opapp import run_opapp
 
 class ParamWidget(QWidget):
 
@@ -16,160 +18,139 @@ class ParamWidget(QWidget):
     super(ParamWidget, self).__init__()
     self.setWindowTitle(u'opapp')
 
-    #----------  
+    with open('./param.json', 'r') as json_data:
+      params = json.load(json_data)
+
+    cam_types = ["sa4", "max", "max10", "mini"]
+    image_sizes = [128, 256, 512]
+    menus = [u"停止", u"実行のみ", u"静止画保存", u"動画作成", u"numpy保存"]
+
+    #----------
     # Control
-    #----------  
-    
-    # cam_type 
+    #----------
+
+    # cam_type
     self.combo1 = QComboBox()
-    self.combo1.addItem("sa4")
-    self.combo1.addItem("max")
-    self.combo1.addItem("max10")
-    self.combo1.addItem("mini")
-    self.combo1.setCurrentIndex(0)
+    for cam_type in cam_types: self.combo1.addItem(cam_type)
+    self.combo1.setCurrentIndex(cam_types.index(params['basic']['cam_type']))
 
-    # image_size 
+    # image_size
     self.combo2 = QComboBox()
-    self.combo2.addItem("128")
-    self.combo2.addItem("256")
-    self.combo2.addItem("512")
-    self.combo2.setCurrentIndex(1)
+    for image_size in image_sizes: self.combo2.addItem(str(image_size))
+    self.combo2.setCurrentIndex(image_sizes.index(int(params['basic']['image_width'])))
 
-    # frame_start 
+    # cam_data
+    self.combo3 = QComboBox()
+    for menu in menus: self.combo3.addItem(menu)
+    self.combo3.setCurrentIndex(int(params['menu']['cam']))
+
+    # vmemmap
+    self.combo4 = QComboBox()
+    for menu in menus: self.combo4.addItem(menu)
+    self.combo4.setCurrentIndex(int(params['menu']['vmem']))
+
+    # pmap
+    self.combo5 = QComboBox()
+    for menu in menus: self.combo5.addItem(menu)
+    self.combo5.setCurrentIndex(int(params['menu']['pmap']))
+
+    # pvmap
+    self.combo6 = QComboBox()
+    for menu in menus: self.combo6.addItem(menu)
+    self.combo6.setCurrentIndex(int(params['menu']['pvmap']))
+
+    # coremap
+    self.combo7 = QComboBox()
+    for menu in menus: self.combo7.addItem(menu)
+    self.combo7.setCurrentIndex(int(params['menu']['core']))
+
+    # integratemap
+    self.combo8 = QComboBox()
+    for i in range(len(menus) - 1): self.combo8.addItem(menus[i])
+    self.combo8.setCurrentIndex(int(params['menu']['integrate']))
+
+    # frame_start
     self.edit1 = QLineEdit()
-    self.edit1.setText(str(0))
+    self.edit1.setText(str(params['basic']['frame_start']))
 
-    # frame_end 
+    # frame_end
     self.edit2 = QLineEdit()
-    self.edit2.setText(str(400))
+    self.edit2.setText(str(params['basic']['frame_end']))
 
-    # diff_min 
+    # diff_min
     self.edit3 = QLineEdit()
-    self.edit3.setText(str(10))
+    self.edit3.setText(str(params['option']['diff_min']))
 
     # int_min
     self.edit4 = QLineEdit()
-    self.edit4.setText(str(100))
+    self.edit4.setText(str(params['option']['intensity_min']))
 
     # smooth_size
     self.edit5 = QLineEdit()
-    self.edit5.setText(str(5))
+    self.edit5.setText(str(params['option']['smooth_size']))
 
     # pv_win
     self.edit6 = QLineEdit()
-    self.edit6.setText(str(9))
+    self.edit6.setText(str(params['option']['pv_win']))
 
+    """
     # pv_erode
     self.edit7 = QLineEdit()
-    self.edit7.setText(str(9))
-    
+    self.edit7.setText(str(params['option']['pv_erode']))
+    """
+
     # save_int
     self.edit8 = QLineEdit()
-    self.edit8.setText(str(5))
+    self.edit8.setText(str(params['option']['save_int']))
 
-    # flg_vmem_save
-    self.cb_1 = QCheckBox(u"マップ", self)
+    # core_log
+    self.cb_1 = QCheckBox(u"保存する", self)
     self.cb_1.setTristate(False)
-    self.cb_1.setCheckState(Qt.Checked)
+    if params['menu']['core_log'] == 1:
+      self.cb_1.setCheckState(Qt.Checked)
+    else:
+      self.cb_1.setCheckState(Qt.Unchecked)
 
-    # flg_vmem_plot
-    self.cb_2 = QCheckBox(u"プロット", self)
-    self.cb_2.setTristate(False)
-    self.cb_2.setCheckState(Qt.Unchecked)
 
-    # flg_pmap_save
-    self.cb_3 = QCheckBox(u"マップ", self)
-    self.cb_3.setTristate(False)
-    self.cb_3.setCheckState(Qt.Checked)
-
-    # flg_pmap_plot
-    self.cb_4 = QCheckBox(u"プロット", self)
-    self.cb_4.setTristate(False)
-    self.cb_4.setCheckState(Qt.Unchecked)
-
-    # flg_pvmap_save
-    self.cb_5 = QCheckBox(u"マップ", self)
-    self.cb_5.setTristate(False)
-    self.cb_5.setCheckState(Qt.Checked)
-
-    # flg_pvmap_plot
-    self.cb_6 = QCheckBox(u"プロット", self)
-    self.cb_6.setTristate(False)
-    self.cb_6.setCheckState(Qt.Unchecked)
-
-    #----------  
+    #----------
     # Model
-    #----------  
-    
+    #----------
+
     def execute():
 
       path = str(QFileDialog.getExistingDirectory(None,
           u'セッションフォルダを選択',
-          '',
+          params['basic']['path'],
           QFileDialog.ShowDirsOnly))
       print path
 
       try:
         assert path is not ''
-        saveDir        = path + "/result/opapp/"
-        cam_type       = str(self.combo1.currentText())
-        image_size     = int(str(self.combo2.currentText()))
-        frame_start    = int(str(self.edit1.text()))
-        frame_end      = int(str(self.edit2.text()))
-        diff_min       = int(str(self.edit3.text()))
-        int_min        = int(str(self.edit4.text()))
-        smooth_size    = int(str(self.edit5.text()))
-        pv_win         = int(str(self.edit6.text()))
-        pv_erode       = int(str(self.edit7.text()))
-        save_int       = int(str(self.edit8.text()))
-        flg_vmem_save  = self.cb_1.isChecked()
-        flg_vmem_plot  = self.cb_2.isChecked()
-        flg_pmap_save  = self.cb_3.isChecked()
-        flg_pmap_plot  = self.cb_4.isChecked()
-        flg_pvmap_save = self.cb_5.isChecked()
-        flg_pvmap_plot = self.cb_6.isChecked()
+        saveDir                           = path + "/result/opapp/"
+        params['basic']['path']           = path
+        params['basic']['cam_type']       = str(self.combo1.currentText())
+        params['basic']['image_width']    = int(self.combo2.currentText())
+        params['basic']['image_height']   = int(self.combo2.currentText())
+        params['basic']['frame_start']    = int(self.edit1.text())
+        params['basic']['frame_end']      = int(self.edit2.text())
+        params['option']['diff_min']      = int(self.edit3.text())
+        params['option']['intensity_min'] = int(self.edit4.text())
+        params['option']['smooth_size']   = int(self.edit5.text())
+        params['option']['pv_win']        = int(self.edit6.text())
+        #pv_erode                         = str(self.edit7.text())
+        params['option']['save_int']      = int(self.edit8.text())
+        params['menu']['cam']             = int(self.combo3.currentIndex())
+        params['menu']['vmem']            = int(self.combo4.currentIndex())
+        params['menu']['pmap']            = int(self.combo5.currentIndex())
+        params['menu']['pvmap']           = int(self.combo6.currentIndex())
+        params['menu']['core']            = int(self.combo7.currentIndex())
+        params['menu']['core_log']        = int(self.cb_1.isChecked())
+        params['menu']['integrate']       = int(self.combo8.currentIndex())
 
-        points = []
+        with open('./param.json', 'w') as json_file:
+          json.dump(params, json_file, ensure_ascii=False, indent=4)
 
-        cam = RawCam(
-            path = path,
-            cam_type = cam_type,
-            image_width=image_size,
-            image_height=image_size,
-            frame_start = frame_start,
-            frame_end = frame_end
-        )
-
-        vmem = VmemMap(cam)
-        if diff_min > 0: vmem.setDiffRange(diff_min=diff_min)
-        if smooth_size > 0 : vmem.smooth(size=smooth_size)
-        if flg_vmem_save:
-          vmem.saveImage(saveDir + "vmem", skip=save_int, img_type = 'png')
-          makeMovie(saveDir+"vmem", img_type="png")
-        if flg_vmem_plot:
-          if len(points) == 0:
-            points = cam.selectPoints(saveDir+"selectPoints.png")
-          vmem.plot(points, savepath = saveDir + "plot_vmem.png")
-
-        pmap = PhaseMap(vmem, shrink=image_size/128)
-        if flg_pmap_save:
-          pmap.saveImage(saveDir+'pmap', skip=save_int, img_type = 'png')	
-          makeMovie(saveDir+"pmap", img_type="png")
-        if flg_pmap_plot:
-          if len(points) == 0:
-            points = cam.selectPoints(saveDir+"selectPoints.png")
-          pmap.plot(points, savepath = saveDir + "plot_pmap.png")
-
-        pvmap = PhaseVarianceMap(pmap, size=pv_win)
-        if pv_erode > 0:
-          pvmap.morphROI(erosion=pv_erode) 
-        if flg_pvmap_save:
-          pvmap.saveImage(saveDir+'pvmap', skip=save_int, img_type = 'png')	
-          makeMovie(saveDir+"pvmap", img_type="png")
-        if flg_pvmap_plot:
-          if len(points) == 0:
-            points = cam.selectPoints(saveDir+"selectPoints.png")
-          pvmap.plot(points, savepath = saveDir + "plot_pvmap.png")
+        run_opapp(raw_path=path, result_path=saveDir)
 
         QMessageBox.information(None,"",u"処理完了！　保存フォルダ:\n"+saveDir)
 
@@ -182,9 +163,9 @@ class ParamWidget(QWidget):
     btn = QPushButton(u'セッションフォルダを選んで実行', self)
     btn.clicked.connect(lambda: execute())
 
-    #----------  
+    #----------
     # View
-    #----------  
+    #----------
 
     cont_cam = QVBoxLayout()
     cont_vmem = QVBoxLayout()
@@ -249,12 +230,14 @@ class ParamWidget(QWidget):
     layout.addWidget(self.edit6)
     cont_pvmap.addLayout(layout)
 
+    """
     layout = QHBoxLayout()
     label_ = QLabel(u'ROI 縮小サイズ　　　　　　')
     layout.addWidget(label_)
     layout.addWidget(self.edit7)
     cont_pvmap.addLayout(layout)
-    
+    """
+
     #----- cont_save
 
     layout = QHBoxLayout()
@@ -263,34 +246,54 @@ class ParamWidget(QWidget):
     layout.addWidget(self.edit8)
     cont_save.addLayout(layout)
 
-    layout = QHBoxLayout()
-    label_ = QLabel(u'膜電位　')
+    layout= QHBoxLayout()
+    label_ = QLabel(u'カメラ画像　　　　　　　　')
+    layout.addWidget(label_)
+    layout.addWidget(self.combo3)
+    cont_save.addLayout(layout)
+
+    layout= QHBoxLayout()
+    label_ = QLabel(u'膜電位マップ　　　　　　　')
+    layout.addWidget(label_)
+    layout.addWidget(self.combo4)
+    cont_save.addLayout(layout)
+
+    layout= QHBoxLayout()
+    label_ = QLabel(u'位相マップ　　　　　　　　')
+    layout.addWidget(label_)
+    layout.addWidget(self.combo5)
+    cont_save.addLayout(layout)
+
+    layout= QHBoxLayout()
+    label_ = QLabel(u'位相分散マップ　　　　　　')
+    layout.addWidget(label_)
+    layout.addWidget(self.combo6)
+    cont_save.addLayout(layout)
+
+    layout= QHBoxLayout()
+    label_ = QLabel(u'コアマップ　　　　　　　　')
+    layout.addWidget(label_)
+    layout.addWidget(self.combo7)
+    cont_save.addLayout(layout)
+
+    layout= QHBoxLayout()
+    label_ = QLabel(u'コアのログ出力　　　　　　　')
     layout.addWidget(label_)
     layout.addWidget(self.cb_1)
-    layout.addWidget(self.cb_2)
     cont_save.addLayout(layout)
 
-    layout = QHBoxLayout()
-    label_ = QLabel(u'位相　　')
+    layout= QHBoxLayout()
+    label_ = QLabel(u'統合マップ　　　　　　　　')
     layout.addWidget(label_)
-    layout.addWidget(self.cb_3)
-    layout.addWidget(self.cb_4)
+    layout.addWidget(self.combo8)
     cont_save.addLayout(layout)
-
-    layout = QHBoxLayout()
-    label_ = QLabel(u'位相分散')
-    layout.addWidget(label_)
-    layout.addWidget(self.cb_5)
-    layout.addWidget(self.cb_6)
-    cont_save.addLayout(layout)
-
     #----- cont_exec
 
     layout = QHBoxLayout()
     layout.addWidget(btn)
     cont_exec.addLayout(layout)
 
-    #----- build up 
+    #----- build up
 
     gb_cam = QGroupBox(u"カメラ入力")
     gb_cam.setLayout(cont_cam)
