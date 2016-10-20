@@ -1,30 +1,43 @@
 {
+    "core": {
+        "pv_thre": 0.8
+    }, 
+    "roi_rect": {
+        "top": 0, 
+        "left": 32, 
+        "right": 32, 
+        "bottom": 0
+    }, 
     "menu": {
         "core": 1, 
         "cam": 1, 
         "pvmap": 1, 
         "vmem": 1, 
+        "save_int": 5, 
         "pmap": 1, 
         "integrate": 3, 
         "core_log": 0
     }, 
-    "option": {
-        "pv_win": 9, 
-        "diff_min": 0, 
-        "roi_rect": {
-            "top": 64
-        }, 
-        "save_int": 5, 
-        "core_thre": 0.6, 
-        "intensity_min": 0, 
-        "smooth_size": 0
+    "integ": {
+        "phase_wt": 2.0, 
+        "phase_wf": -2.0, 
+        "phase_dwt": 0.3, 
+        "phase_dwf": 0.3
     }, 
-    "basic": {
+    "vmem": {
+        "diff_min": 0, 
+        "smooth_size": 4, 
+        "intensity_min": 0
+    }, 
+    "camera": {
         "frame_end": 400, 
         "image_width": 256, 
-        "cam_type": "max", 
+        "cam_type": "sa4", 
         "image_height": 256, 
         "frame_start": 0, 
-        "path": ""
+        "path": "E:\\Tsuji model\\20161014 Tsuji75\\C001S0027@"
+    }, 
+    "pvmap": {
+        "pv_win": 9
     }
 }
