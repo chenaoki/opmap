@@ -66,7 +66,7 @@ class VideoData(object):
             self.roi[bottom:, :] = 0
         if left is not None :
             assert left >= 0 and left < self.roi.shape[1]
-            self.roi[:, :top] = 0
+            self.roi[:, :left] = 0
         if right is not None :
             assert right >= 0 and right < self.roi.shape[1]
             self.roi[:, right:] = 0
