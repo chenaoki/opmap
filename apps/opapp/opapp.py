@@ -146,5 +146,6 @@ if __name__ == '__main__':
     print 'python {0} [target directory]'.format(sys.argv[0])
     exit()
 
-  path = sys.argv[1]
-  run_opapp(raw_path=path)
+  src = sys.argv[1]
+  dst= sys.argv[2]
+  run_opapp(raw_path=src, result_path=dst)
