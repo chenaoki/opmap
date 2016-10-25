@@ -2,9 +2,13 @@ import sys, os, json, glob
 import matplotlib.pyplot as plt
 import cv2
 import numpy as np
-
-from opmap.opmap import VmemMap, RawCam,PhaseMap,PhaseVarianceMap, CoreMap, makeMovie
-from opmap.cmap_bipolar import bipolar
+from opmap.RawCam import RawCam
+from opmap.VmemMap import VmemMap
+from opmap.PhaseMap import PhaseMap
+from opmap.PhaseVarianceMap import PhaseVarianceMap
+from opmap.CoreMap import CoreMap
+from opmap.util import makeMovie
+from opmap.cmap import bipolar
 
 def run_opapp(json_path='./param.json', raw_path=None, result_path=None):
     with open(json_path, "r") as f : params = json.load(f)

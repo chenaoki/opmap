@@ -1,6 +1,8 @@
 import sys
 import os
-from opmap.opmap import VmemMap, RawCam, makeMovie
+from opmap.RawCam import RawCam
+from opmap.VmemMap import VmemMap
+from opmap.util import makeMovie 
 import json
 
 def experiment(path, saveDir, param_file="param.json"):

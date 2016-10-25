@@ -4,8 +4,8 @@
     }, 
     "roi_rect": {
         "top": 0, 
-        "left": 32, 
-        "right": 32, 
+        "left": 0, 
+        "right": 0, 
         "bottom": 0
     }, 
     "menu": {
@@ -13,10 +13,10 @@
         "cam": 1, 
         "pvmap": 1, 
         "vmem": 1, 
-        "save_int": 5, 
+        "save_int": 1, 
         "pmap": 1, 
         "integrate": 3, 
-        "core_log": 0
+        "core_log": 1
     }, 
     "integ": {
         "phase_wt": 2.0, 
@@ -25,17 +25,17 @@
         "phase_dwf": 0.3
     }, 
     "vmem": {
-        "diff_min": 0, 
-        "smooth_size": 4, 
-        "intensity_min": 0
+        "diff_min": 70, 
+        "smooth_size": 9, 
+        "intensity_min": 70
     }, 
     "camera": {
         "frame_end": 400, 
-        "image_width": 256, 
+        "image_width": 512, 
         "cam_type": "sa4", 
-        "image_height": 256, 
+        "image_height": 512, 
         "frame_start": 0, 
-        "path": "E:\\Tsuji model\\20161014 Tsuji75\\C001S0027@"
+        "path": ""
     }, 
     "pvmap": {
         "pv_win": 9

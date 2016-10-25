@@ -1,22 +1,8 @@
-#!/usr/bin/env python
-
-"""
-Copyright 2012 endolith at gmail com
-Copyright 2009 Ged Ridgway at gmail com
-
-Translation and modification of
-http://www.mathworks.com/matlabcentral/fileexchange/26026-bipolar-colormap
-
-Based on Manja Lehmann's hand-crafted colormap for cortical visualisation
-"""
-
 from __future__ import division
 import scipy
 from matplotlib import cm
 from numpy import linspace, size, clip, dstack, concatenate
 
-
-# rename to hotcold
 def bipolar(lutsize=1024, neutral=0.333, weight=1, interp=[]):
     """
     Bipolar hot/cold colormap, with neutral central color.
