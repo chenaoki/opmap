@@ -1,7 +1,9 @@
 import numpy as np
 import os
 import scipy
+from scipy.signal import firwin
 from VideoData import VideoData
+from numba.decorators import autojit
 
 class PhaseMap( VideoData ):
 
@@ -15,25 +17,26 @@ class PhaseMap( VideoData ):
         nyq = fs/2.0
         fe = cutoff / nyq   # Cut off frequency : 20Hz
         numtaps = 15  # Filter size
-        b = scipy.signal.firwin(numtaps, fe) # Low pass filter
+        b = firwin(numtaps, fe) # Low pass filter
 
-        for n in range(self.data.shape[1]):
-            for m in range(self.data.shape[2]):
-                n_ = n*shrink
-                m_ = m*shrink
-                try:
-                    assert vmem.roi[n_, m_] > 0
-                    data = vmem.data[ :, n_, m_]
+        def f_pixelwise(src):
+            dst = np.zeros_like(src)
+            for n in range(src.shape[1]):
+                for m in range(src.shape[2]):
+                    data = src[ :, n, m]
                     data_an = scipy.signal.lfilter(b, 1, data)
                     data_max = np.max(data_an)
                     data_min = np.min(data_an)
-                    assert data_max > data_min
-                    data_an  = 2.0 * (data_an - data_min) / (data_max - data_min) - 1.0
-                    self.data[:, n, m] = np.angle(scipy.signal.hilbert(data_an))
-                    self.roi[n, m] = 1.0
-                except:
-                    self.data[:, n, m] = 0.0
-                    self.roi[n, m] = 0.0
+                    data_range = data_max - data_min 
+                    data_range += (data_range==0)*1 # to avoid zero division
+                    data_an  = 2.0 * (data_an - data_min) / data_range - 1.0
+                    dst[:, n, m] = np.angle(scipy.signal.hilbert(data_an))
+            return dst
+        f_numba = autojit(f_pixelwise)
+        self.data = f_numba(vmem.data[:, ::shrink, ::shrink])
+
+        self.roi = np.array(vmem.roi[::shrink, ::shrink])
+        self.data *= self.roi
 
         self.vmin = -np.pi
         self.vmax = np.pi
