@@ -2,12 +2,12 @@ import numpy as np
 import os
 import scipy
 from scipy.signal import firwin
+from scipy.interpolate import interp1d
 from VideoData import VideoData
-from numba.decorators import autojit
 
 class PhaseMap( VideoData ):
 
-    def __init__(self, vmem, shrink = 4, fs = 1000.0, cutoff = 20.0):
+    def __init__(self, vmem, shrink = 4, fs = 1000.0, fe = [2.0, 20.0] ):
 
         self.shrink = shrink
         size_org = vmem.data.shape
@@ -15,25 +15,21 @@ class PhaseMap( VideoData ):
         super(PhaseMap, self).__init__(size_org[0],size_org[1]/shrink, size_org[2]/shrink)
 
         nyq = fs/2.0
-        fe = cutoff / nyq   # Cut off frequency : 20Hz
-        numtaps = 15  # Filter size
-        b = firwin(numtaps, fe) # Low pass filter
-
+        fe = np.array(fe) / nyq   # Cut off frequency : 20Hz
+        numtaps = 127  # Filter size
+        b = firwin(numtaps, fe, pass_zero=(len(fe)<2)) # Low pass or band pass filter
+        
         def f_pixelwise(src):
             dst = np.zeros_like(src)
             for n in range(src.shape[1]):
                 for m in range(src.shape[2]):
-                    data = src[ :, n, m]
-                    data_an = scipy.signal.lfilter(b, 1, data)
-                    data_max = np.max(data_an)
-                    data_min = np.min(data_an)
-                    data_range = data_max - data_min 
-                    data_range += (data_range==0)*1 # to avoid zero division
-                    data_an  = 2.0 * (data_an - data_min) / data_range - 1.0
-                    dst[:, n, m] = np.angle(scipy.signal.hilbert(data_an))
+                    y = src[ :, n, m]
+                    y = scipy.signal.lfilter(b, 1, y)[numtaps/2:]
+                    y -= np.mean(y)
+                    y_ = np.r_[y, np.zeros(numtaps/2)]
+                    dst[:, n, m] = np.angle(scipy.signal.hilbert(y_))
             return dst
-        f_numba = autojit(f_pixelwise)
-        self.data = f_numba(vmem.data[:, ::shrink, ::shrink])
+        self.data = f_pixelwise(vmem.data[:, ::shrink, ::shrink])
 
         self.roi = np.array(vmem.roi[::shrink, ::shrink])
         self.data *= self.roi
