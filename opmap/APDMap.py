@@ -85,6 +85,6 @@ class APDMap( VideoData ):
                               if APD_value > 250:
                                   APD_value = 0
                               self.data[k, i, j] = APD_value
-          return
+        return
 
 
