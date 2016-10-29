@@ -7,7 +7,7 @@ from opmap.VmemMap import VmemMap
 from opmap.PhaseMap import PhaseMap
 from opmap.PhaseVarianceMap import PhaseVarianceMap
 from opmap.CoreMap import CoreMap
-from opmap.util import makeMovie
+from opmap.util import makeMovie, phase_add
 from opmap.cmap import bipolar
 
 def run_opapp(json_path='./param.json', raw_path=None, result_path=None):
@@ -26,10 +26,10 @@ def run_opapp(json_path='./param.json', raw_path=None, result_path=None):
     smooth_size   = param_vmem.get("smooth_size",9)
     threshold     = param_core.get("pv_thre",0.6)
     pv_win        = param_pvmap.get("pv_win",9)
-    phase_wf         = param_integ.get("phase_wf",-0.6*np.pi)
-    phase_wt         = param_integ.get("phase_wt", 0.6*np.pi)
-    phase_dwf        = param_integ.get("phase_dwf", 0.1 *np.pi)
-    phase_dwt        = param_integ.get("phase_dwt", 0.1 *np.pi)
+    phase_wf      = param_integ.get("phase_wf",-0.6*np.pi)
+    phase_wt      = param_integ.get("phase_wt", 0.6*np.pi)
+    phase_dwf     = param_integ.get("phase_dwf", 0.1 *np.pi)
+    phase_dwt     = param_integ.get("phase_dwt", 0.1 *np.pi)
 
     roi_rect = {
         "top" : param_roi["top"],
@@ -119,8 +119,8 @@ def run_opapp(json_path='./param.json', raw_path=None, result_path=None):
 
             # Blending
             vm = cv2.resize( 0.5*(1.0+vmem.data[f,:,:]), (s[1],s[2]) )
-            wf = ( ( pmap.data[f,:,:] >= phase_wf - phase_dwf )*1 ) * ( ( pmap.data[f,:,:] <= phase_wf             )*1 )
-            wt = ( ( pmap.data[f,:,:] >= phase_wt             )*1 ) * ( ( pmap.data[f,:,:] <= phase_wt + phase_dwt )*1 )
+            wf = ( np.absolute( phase_add( pmap.data[f,:,:] , -phase_wf ) ) < phase_dwf )*1
+            wt = ( np.absolute( phase_add( pmap.data[f,:,:] , -phase_wt ) ) < phase_dwt )*1
             wf = wf.astype(np.uint8)
             wt = wt.astype(np.uint8)
             core = ((coremap.data[f,:,:]>0)*1).astype(np.uint8)

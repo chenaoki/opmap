@@ -1,4 +1,10 @@
 import os
+import numpy as np
+
+def phase_add(a, b):
+    a_ = np.cos(a) + np.sin(a)*1j
+    b_ = np.cos(b) + np.sin(b)*1j
+    return np.angle(a_*b_)
 
 def makeMovie(path, img_type='png'):
 
