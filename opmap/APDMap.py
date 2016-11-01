@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.ndimage import gaussian_filter1d, filters
 from scipy.interpolate import interp1d, splrep, splev
 from opmap import VideoData
 
@@ -8,11 +9,11 @@ class APDMap( VideoData ):
 
         data = vmem.data
         shape = data.shape
-        data = scipy.ndimage.gaussian_filter1d(data, 2, axis=0)
+        data = gaussian_filter1d(data, 2, axis=0)
         is_active = 1
         APD_value = 0
         for i in range(shape[0]):
-            data[i, :, :] = scipy.ndimage.filters.gaussian_filter(data[i, :, :], 2)
+            data[i, :, :] = filters.gaussian_filter(data[i, :, :], 2)
 
         super(APDMap, self).__init__(shape[0], shape[1], shape[2])
 
