@@ -43,8 +43,8 @@ class PhaseMap( VideoData ):
         for frame in range( self.data.shape[0]):
             img_cos = np.cos(self.data[frame, :,:]) 
             img_sin = np.sin(self.data[frame, :,:]) 
-            img_cos = scipy.ndimage.filters.uniform_filter(img_cos, size=size, mode='const')
-            img_sin = scipy.ndimage.filters.uniform_filter(img_sin, size=size, mode='const')
+            img_cos = scipy.ndimage.filters.uniform_filter(img_cos, size=size, mode='constant')
+            img_sin = scipy.ndimage.filters.uniform_filter(img_sin, size=size, mode='constant')
             self.data[frame,:,:] = np.angle(img_cos+1j*img_sin)
 
     def smooth_median(self, size = 4):
