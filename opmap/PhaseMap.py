@@ -38,8 +38,14 @@ class PhaseMap( VideoData ):
         self.vmax = np.pi
         self.cmap = 'jet'
         return
+    
+    def smooth(self, size = 5):
+        C = np.cos(self.data) + 1j*np.sin(self.data)
+        for frame in range( self.data.shape[0]):
+            img = C[frame, :, :]
+            self.data[frame,:,:] = np.angle(scipy.ndimage.filters.uniform_filter(img, size=size, mode='const'))
 
-    def smooth(self, size = 4):
+    def smooth_median(self, size = 4):
         assert size > 0
         def phaseComplement(value):
             value -= (value > np.pi)*2*np.pi
