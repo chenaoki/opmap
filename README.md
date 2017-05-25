@@ -39,6 +39,8 @@ conda install -c https://conda.binstar.org/jjhelmus opencv
 ```python
 import opmap
 from opmap.VmemMap import VmemMap
+
+import cv2
 ```
 
 ## How to start
