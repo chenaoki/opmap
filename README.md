@@ -17,6 +17,15 @@
 Python 2.7.13 :: Anaconda 2.4.0 (x86_64)
 ```
 
+* opencvのインストール
+
+condaコマンドを使ってインストール
+(Windowsの場合、Anaconda Promptを使う)
+
+```
+conda install -c https://conda.binstar.org/jjhelmus opencv
+```
+
 * opmapモジュールのインストール
 
 ```
