@@ -6,7 +6,15 @@ import sys
 import os
 import json
 
-from opmap.opmap import RawCam, VmemMap, PhaseMap, PhaseVarianceMap, makeMovie
+import opmap
+from opmap.RawCam import RawCam
+from opmap.VmemMap import VmemMap
+from opmap.PhaseMap import PhaseMap
+from opmap.PhaseVarianceMap import PhaseVarianceMap
+from opmap.CoreMap import CoreMap
+from opmap.util import makeMovie, phase_add
+from opmap.cmap import bipolar
+
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from opapp import run_opapp
@@ -48,7 +56,7 @@ class ParamWidget(QWidget):
 
         with open('./param.json', 'w') as json_file:
           json.dump(params, json_file, ensure_ascii=False, indent=4)
-  
+
   def loadParam(self):
         with open('./param.json', 'r') as json_file:
             params = json.load(json_file)
@@ -79,7 +87,7 @@ class ParamWidget(QWidget):
         self.edit16.setText(str(params['integ']['phase_dwt']))
         self.cb_1.setCheckState(Qt.Checked if params['menu']['core_log'] == 1 else Qt.Unchecked)
 
-        
+
 
   def __init__(self):
 
@@ -384,4 +392,3 @@ class ParamWidget(QWidget):
 app = QApplication(sys.argv)
 a = ParamWidget()
 sys.exit(app.exec_())
-
