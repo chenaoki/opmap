@@ -7,3 +7,4 @@ sample_session/*
 dist/*
 *egg-info*
 build/*
+.python-version*
