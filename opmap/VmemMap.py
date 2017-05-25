@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import ndimage
-from cmap_bipolar import bipolar
+from cmap import bipolar
 from VideoData import VideoData
 
 class VmemMap( VideoData ):
@@ -20,7 +20,7 @@ class VmemMap( VideoData ):
         self.data = self.data_org*self.roi
 
         self.vmin = -1.0
-        self.vmax = 1.0            
+        self.vmax = 1.0
         self.cmap = bipolar(neutral=0, lutsize=1024)
         return
 
@@ -40,5 +40,3 @@ class VmemMap( VideoData ):
         for frame in range( self.data.shape[0]):
             self.data[frame,:,:] = ndimage.gaussian_filter(self.data[frame,:,:], sigma = size)
         return
-
-
