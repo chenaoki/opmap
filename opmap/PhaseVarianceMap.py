@@ -6,6 +6,7 @@ class PhaseVarianceMap( VideoData ):
 
     def __init__(self, phasemap, size = 9):
         assert size > 0
+        self.size = size
 
         super(PhaseVarianceMap, self).__init__(*phasemap.data.shape)
         kernel = np.ones((size, size), dtype=np.float32)

@@ -2,16 +2,20 @@ import numpy as np
 from glob import glob
 import cv2
 import scipy
+import math
 import matplotlib.pyplot as plt
 from VideoData import VideoData
 
-class CoreMap( VideoData ):
+class PhaseVariancePeakMap( VideoData ):
 
-  def __init__(self, pvmap, threshold=0.8):
-    assert threshold >= 0.0 and threshold <= 1.0
-    self.threshold = threshold
+  def __init__(self, pvmap, threshold=None):
+    if threshold is not None:
+        assert threshold >= 0.0 and threshold <= 1.0
+        self.threshold = threshold
+    else:
+        self.threshold = 1 - math.sqrt( -math.log(0.05) / ( pvmap.size**2) )
 
-    super(CoreMap, self).__init__(*pvmap.data.shape)
+    super(PhaseVariancePeakMap, self).__init__(*pvmap.data.shape)
 
     self.roi = pvmap.roi
     self.data, self.coreNum = scipy.ndimage.label((pvmap.data>self.threshold)*1) 
