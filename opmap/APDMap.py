@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter1d, filters
 from scipy.interpolate import interp1d, splrep, splev
-from opmap import VideoData
+from VideoData import VideoData
 
 class APDMap( VideoData ):
 
