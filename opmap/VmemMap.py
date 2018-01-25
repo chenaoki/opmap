@@ -6,9 +6,8 @@ from VideoData import VideoData
 class VmemMap( VideoData ):
 
     def __init__(self, rawcam):
-
-    	shape = rawcam.data.shape
-    	super(VmemMap, self).__init__(shape[0], shape[1], shape[2])
+        shape = rawcam.data.shape
+        super(VmemMap, self).__init__(shape[0], shape[1], shape[2])
 
         im_max = np.max(rawcam.data, axis=0)
         im_min = np.min(rawcam.data, axis=0)

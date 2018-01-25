@@ -162,10 +162,6 @@ def bipolar(lutsize=1024, neutral=0.333, weight=1, interp=[]):
 
 if __name__ == "__main__":
 
-    def relative_luminance((R, G, B)):
-        Y = 0.2126 * R + 0.7152 * G + 0.0722 * B
-        return Y
-
     from pylab import *
 
     dx, dy = 0.01, 0.01

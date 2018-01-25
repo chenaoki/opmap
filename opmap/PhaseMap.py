@@ -55,7 +55,7 @@ class PhaseMap( VideoData ):
             return value
         new_data = np.zeros_like(self.data)
         for frame in range( self.data.shape[0]):
-            if frame % 10 == 0 : print frame
+            if frame % 10 == 0 : print(frame)
             for n in range(self.data.shape[1])[size:-size]:
                 for m in range(self.data.shape[2])[size:-size]:
                     base = self.data[frame, n, m]
