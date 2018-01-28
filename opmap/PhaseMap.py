@@ -1,35 +1,55 @@
 import numpy as np
 import os
 import scipy
-from scipy.signal import firwin
-from scipy.interpolate import interp1d
+import scipy.interpolate as interpolate
+from scipy.ndimage import gaussian_filter
+from scipy.ndimage.filters import gaussian_filter1d
+from scipy.signal import hilbert
 from VideoData import VideoData
+
+import f_peakdetect
+peakdetect = f_peakdetect.peakdetect
 
 class PhaseMap( VideoData ):
 
-    def __init__(self, vmem, shrink = 4, fs = 1000.0, fe = [2.0, 20.0] ):
-
+    def __init__(self, vmem, width = 128, sigma_mean = 32, sigma_t = 5):
+        
+        shrink = int(vmem.data.shape[2] / width)
         self.shrink = shrink
         size_org = vmem.data.shape
 
         super(PhaseMap, self).__init__(size_org[0],size_org[1]/shrink, size_org[2]/shrink)
-
-        nyq = fs/2.0
-        fe = np.array(fe) / nyq   # Cut off frequency : 20Hz
-        numtaps = 127  # Filter size
-        b = firwin(numtaps, fe, pass_zero=(len(fe)<2)) # Low pass or band pass filter
         
-        def f_pixelwise(src):
-            dst = np.zeros_like(src)
-            for n in range(src.shape[1]):
-                for m in range(src.shape[2]):
-                    y = src[ :, n, m]
-                    y = scipy.signal.lfilter(b, 1, y)[numtaps/2:]
-                    y -= np.mean(y)
-                    y_ = np.r_[y, np.zeros(numtaps/2)]
-                    dst[:, n, m] = np.angle(scipy.signal.hilbert(y_))
-            return dst
-        self.data = f_pixelwise(vmem.data[:, ::shrink, ::shrink])
+
+        def f_pixel_mean(ts):
+            try:    
+                peaks, bottoms = peakdetect(ts, lookahead=50)
+                peaks = np.array(peaks)
+                bottoms = np.array(bottoms)
+                start = np.array([[0, ts[0]]])
+                end = np.array([[len(ts), ts[-1]]])
+                peaks_ = np.concatenate((start,peaks, end))
+                bottoms_ = np.concatenate((start,bottoms, end))
+
+                f = interpolate.interp1d(peaks_[:,0], peaks_[:,1], kind="cubic")
+                _peaks_ = f(np.arange(len(ts)))
+                f = interpolate.interp1d(bottoms_[:,0], bottoms_[:,1], kind="cubic")
+                _bottoms_ = f(np.arange(len(ts)))
+
+                mean = (_peaks_+_bottoms_)/2
+                return mean
+
+            except:
+                return np.ones_like(ts)*np.mean(ts)
+
+        def f_pixel_phase(ts):
+            return np.angle(hilbert(gaussian_filter1d(ts, sigma=sigma_t)))
+        
+        V = vmem.data[:,::shrink,::shrink]
+        Vmean = np.apply_along_axis(f_pixel_mean, 0, V)        
+        for frame in range(len(Vmean)):
+            Vmean[frame,:,:] = gaussian_filter(Vmean[frame,:,:], sigma = sigma_mean)
+        self.data = np.apply_along_axis(f_pixel_phase, 0, V - Vmean)
 
         self.roi = np.array(vmem.roi[::shrink, ::shrink])
         self.data *= self.roi

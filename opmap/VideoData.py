@@ -1,7 +1,8 @@
 import numpy as np
-import os
+import os, shutil
 import matplotlib.pyplot as plt
 import scipy
+from util import makeMovie
 
 class VideoData(object):
 
@@ -60,14 +61,22 @@ class VideoData(object):
         for frame in range(self.data.shape[0]):
             if frame % skip == 0:
                 plt.imsave(
-                    '{0}/{1:0>6}.{2}'.format(savedir, frame/skip, img_type),
+                    '{0}/{1:0>6}.{2}'.format(savedir, int(frame/skip), img_type),
                     self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap
                 )
         plt.imsave(
          '{0}/roi.{1}'.format(savedir, img_type),
             self.roi, vmin=0.0, vmax=1.0, cmap='gray'
         )
-
+        
+    def saveMovie(self, save_path, skip=1):
+        savedir = './temp_mov'
+        if os.path.exists(savedir):
+            shutil.rmtree(savedir)
+        self.saveImage(savedir, skip=skip)
+        makeMovie(savedir)
+        shutil.move(savedir+'.avi', save_path)
+        
     def plot(self, points, start=None, end=None, filter_size=None, savepath = None):
         if start is None : start = 0
         if end is None : end = self.data.shape[0]
