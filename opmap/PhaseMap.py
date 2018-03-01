@@ -18,7 +18,7 @@ class PhaseMap( VideoData ):
         self.shrink = shrink
         size_org = vmem.data.shape
 
-        super(PhaseMap, self).__init__(size_org[0],size_org[1]/shrink, size_org[2]/shrink)
+        super(PhaseMap, self).__init__(size_org[0],size_org[1]//shrink, size_org[2]//shrink)
         
 
         def f_pixel_mean(ts):
