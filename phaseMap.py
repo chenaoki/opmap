@@ -1,14 +1,11 @@
 import numpy as np
-import os
 import scipy
 import scipy.interpolate as interpolate
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import hilbert
-from VideoData import VideoData
-
-import f_peakdetect
-peakdetect = f_peakdetect.peakdetect
+from .videoData import VideoData
+from .f_peakdetect import peakdetect
 
 class PhaseMap( VideoData ):
 

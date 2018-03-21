@@ -1,6 +1,6 @@
 import numpy as np
 import scipy
-from VideoData import VideoData
+from .videoData import VideoData
 
 class PhaseVarianceMap( VideoData ):
 

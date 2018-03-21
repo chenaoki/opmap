@@ -1,10 +1,7 @@
 import numpy as np
-from glob import glob
-import cv2
 import scipy
 import math
-import matplotlib.pyplot as plt
-from VideoData import VideoData
+from .videoData import VideoData
 
 class PhaseVariancePeakMap( VideoData ):
 

@@ -2,7 +2,7 @@ import numpy as np
 import os, shutil
 import matplotlib.pyplot as plt
 import scipy
-from util import makeMovie
+from .util import makeMovie
 
 class VideoData(object):
 

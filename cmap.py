@@ -1,8 +1,8 @@
 from __future__ import division
-import scipy
 from matplotlib import cm
-from numpy import linspace, size, clip, dstack, concatenate
+from numpy import linspace, dstack, concatenate
 
+#from numpy import size, clip
 def bipolar(lutsize=1024, neutral=0.333, weight=1, interp=[]):
     """
     Bipolar hot/cold colormap, with neutral central color.
@@ -160,29 +160,29 @@ def bipolar(lutsize=1024, neutral=0.333, weight=1, interp=[]):
 
     return cm.colors.LinearSegmentedColormap.from_list('bipolar', ynew, lutsize)
 
-if __name__ == "__main__":
-
-    from pylab import *
-
-    dx, dy = 0.01, 0.01
-
-
-    def func3(x,y):
-        # Sinusoid clearly shows edges, bands, or halos in the colormap
-        return sin(x) + sin(y)
-
-    x = arange(-4.0, 4.0001, dx)
-    y = arange(-4.0, 4.0001, dy)
-
-    X,Y = meshgrid(x, y)
-
-    Z = func3(X, Y)
-    figure()
-    im = imshow(Z, vmax=abs(Z).max(), vmin=-abs(Z).max(),
-                origin='lower',
-                extent=[-3, 3, -3, 3],
-                cmap=bipolar(neutral=0, lutsize=1024), # my favorite
-                )
-    colorbar()
-
-    show()
+#if __name__ == "__main__":
+#
+#    from pylab import *
+#
+#    dx, dy = 0.01, 0.01
+#
+#
+#    def func3(x,y):
+#        # Sinusoid clearly shows edges, bands, or halos in the colormap
+#        return sin(x) + sin(y)
+#
+#    x = arange(-4.0, 4.0001, dx)
+#    y = arange(-4.0, 4.0001, dy)
+#
+#    X,Y = meshgrid(x, y)
+#
+#    Z = func3(X, Y)
+#    figure()
+#    im = imshow(Z, vmax=abs(Z).max(), vmin=-abs(Z).max(),
+#                origin='lower',
+#                extent=[-3, 3, -3, 3],
+#                cmap=bipolar(neutral=0, lutsize=1024), # my favorite
+#                )
+#    colorbar()
+#
+#    show()

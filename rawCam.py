@@ -1,7 +1,7 @@
 import numpy as np
 from glob import glob
 import cv2
-from VideoData import VideoData
+from .videoData import VideoData
 
 class RawCam( VideoData ):
     cam_dtype={

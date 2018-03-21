@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 from scipy.signal import convolve2d
 
-from VideoData import VideoData
+from videoData import VideoData
 
 class BrayPSMap( VideoData ):
 
