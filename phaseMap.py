@@ -28,9 +28,9 @@ class PhaseMap( VideoData ):
                 peaks_ = np.concatenate((start,peaks, end))
                 bottoms_ = np.concatenate((start,bottoms, end))
 
-                f = interpolate.interp1d(peaks_[:,0], peaks_[:,1], kind="cubic")
+                f = interpolate.interp1d(peaks_[:,0], peaks_[:,1], kind="linear")
                 _peaks_ = f(np.arange(len(ts)))
-                f = interpolate.interp1d(bottoms_[:,0], bottoms_[:,1], kind="cubic")
+                f = interpolate.interp1d(bottoms_[:,0], bottoms_[:,1], kind="linear")
                 _bottoms_ = f(np.arange(len(ts)))
 
                 mean = (_peaks_+_bottoms_)/2
