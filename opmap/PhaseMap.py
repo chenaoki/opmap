@@ -26,19 +26,27 @@ class PhaseMap( VideoData ):
                 peaks, bottoms = peakdetect(ts, lookahead=50)
                 peaks = np.array(peaks)
                 bottoms = np.array(bottoms)
-                start = np.array([[0, ts[0]]])
-                end = np.array([[len(ts), ts[-1]]])
-                peaks_ = np.concatenate((start,peaks, end))
-                bottoms_ = np.concatenate((start,bottoms, end))
+                
+                if len(peaks) > 0 and len(bottoms) > 0:
+               
+                    start = np.array([[0, ts[0]]])
+                    end = np.array([[len(ts), ts[-1]]])
+                    peaks_ = np.concatenate((start,peaks, end))
+                    bottoms_ = np.concatenate((start,bottoms, end))
+                    
+                    f_peak = interpolate.interp1d(peaks_[:,0], peaks_[:,1], kind="linear", bounds_error=False)
+                    _peaks_ = f(np.arange(len(ts)))
+                    f_bottom = interpolate.interp1d(bottoms_[:,0], bottoms_[:,1], kind="linear", bounds_error=False)
+                    _bottoms_ = f(np.arange(len(ts))) 
+            
+                    mean = (_peaks_+_bottoms_)/2
 
-                f = interpolate.interp1d(peaks_[:,0], peaks_[:,1], kind="cubic")
-                _peaks_ = f(np.arange(len(ts)))
-                f = interpolate.interp1d(bottoms_[:,0], bottoms_[:,1], kind="cubic")
-                _bottoms_ = f(np.arange(len(ts)))
-
-                mean = (_peaks_+_bottoms_)/2
+                else:
+                    
+                    mean = np.ones(len(ts))*np.mean(ts)
+                    
                 return mean
-
+                    
             except:
                 return np.ones_like(ts)*np.mean(ts)
 
