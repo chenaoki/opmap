@@ -29,44 +29,35 @@ def f_pixel_mean(ts, h=0.5):
     peaks, bottoms = f_pixel_peaks(ts)
     return h*peaks+(1-h)*bottoms
 
-def f_pixel_updown(ts, thre_up=0.75, thre_down=0.25):
+def f_pixel_updown(ts, thre_type, thre_up, thre_down):
     
-    peaks, bottoms = f_pixel_peaks(ts)
-    threp_up_line = thre_up*peaks+(1-thre_up)*bottoms
-    threp_down_line = thre_down*peaks+(1-thre_down)*bottoms
-    arr_updown = np.zeros_like(ts, dtype=np.int8)
+    if thre_type is 'const':
+        thre_up_line = np.ones_like(ts) * ( thre_up*ts.max() + (1-thre_up)*ts.min() )
+        thre_down_line = np.ones_like(ts) * ( thre_down*ts.max() + (1-thre_down)*ts.min() )
+    elif thre_type is 'peak':
+        peaks, bottoms = f_pixel_peaks(ts)
+        thre_up_line = thre_up*peaks+(1-thre_up)*bottoms
+        thre_down_line = thre_down*peaks+(1-thre_down)*bottoms
+    
+    list_up = []; list_down = [];
+    state_up = False
     for i, v in enumerate(ts):
         if i == 0 : continue
-        flg_up = 1 if v > threp_up_line[i] else 0
-        flg_down = 1 if v < threp_down_line[i] else 0
-        flg_up *= ( 1 - arr_updown[i-1] )
-        flg_down *= ( arr_updown[i-1] )
-        arr_updown[i] = (1-flg_down)*(flg_up+arr_updown[i-1])
+        flg_up   = ( ( v > thre_up_line[i] ) and ( not state_up ) )
+        flg_down = ( ( v < thre_down_line[i] ) and state_up )
+        state_up = ( state_up and (not flg_down) ) or  ( ( not state_up) and flg_up ) 
+        if flg_up: list_up.append(i)
+        if flg_down: list_down.append(i)
             
-    return arr_updown
+    return (list_up, list_down)
 
-def f_pixel_apd(ts, thre_up=0.6, thre_down=0.4):
+def f_pixel_apd(ts, max_beats, thre_type, thre_up, thre_down):
+    list_up, list_down = f_pixel_updown(ts, thre_type, thre_up, thre_down)
+    ret = np.zeros(max_beats)
+    for i in range(max_beats):
+        if len(list_up) > i and len(list_down) > i:
+            ret[i] = max( 0, list_down[i] - list_up[i] )
+    return ret
     
-    peaks, bottoms = f_pixel_peaks(ts)
-    thre_up_line = thre_up*peaks+(1-thre_up)*bottoms
-    thre_down_line = thre_down*peaks+(1-thre_down)*bottoms
-    
-    #vmax = ts.max(); vmin=ts.min()
-    #thre_up_v= (thre_up)*vmax + (1-thre_up)*vmin
-    #thre_down_v = (thre_down)*vmax + (1-thre_down)*vmin
-    
-    updown = 0; cnt = 0
-    arr_apd = np.zeros_like(ts, dtype=np.int8)    
-    for i, v in enumerate(ts):
-        if i == 0 : continue
-        flg_up = 1 if v > thre_up_line[i] else 0
-        flg_down = 1 if v < thre_down_line[i] else 0
-        flg_up *= ( 1 - updown )
-        flg_down *= ( updown )
-        updown = (1-flg_down)*(flg_up+updown)
-        cnt = (1-flg_up)*(cnt+updown)
-        arr_apd[i] = flg_down*cnt + (1-flg_down)*arr_apd[i-1]
-    return arr_apd
-
-def f_pixel_phase(ts, sigma_t):
-    return np.angle(hilbert(gaussian_filter1d(ts, sigma=sigma_t)))
+def f_pixel_phase(ts):
+    return np.angle(hilbert(ts))
