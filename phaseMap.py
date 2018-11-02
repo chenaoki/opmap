@@ -5,35 +5,15 @@ from scipy.ndimage import gaussian_filter
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import hilbert
 from .videoData import VideoData
-from .f_peakdetect import peakdetect
-from .f_pixel import f_pixel_mean, f_pixel_phase
 
 class PhaseMap( VideoData ):
 
-    def __init__(self, vmem, width = 128, sigma_xy = 32, sigma_t = 5):
+    def __init__(self, vmem, width = 128):
         
-        shrink = int(vmem.data.shape[2] / width)
-        self.shrink = shrink
+        self.shrink = int(vmem.data.shape[2] / width)
         size_org = vmem.data.shape
-
-        super(PhaseMap, self).__init__(size_org[0],size_org[1]//shrink, size_org[2]//shrink)
-                
-        V = vmem.data[:,::shrink,::shrink]
-        
-        Vmean = np.apply_along_axis(f_pixel_mean, 0, V)                       
-        if sigma_xy > 1:
-            for frame in range(len(Vmean)):
-                Vmean[frame,:,:] = gaussian_filter(Vmean[frame,:,:], sigma = sigma_xy)
-                
-        Vamp = V-Vmean
-        if sigma_t > 1:
-            Vamp = np.apply_along_axis(gaussian_filter1d, 0, Vamp, sigma = sigma_t)
-            
-        self.data = np.apply_along_axis(f_pixel_phase, 0, arr=Vamp)
-
-        self.roi = np.array(vmem.roi[::shrink, ::shrink])
-        self.data *= self.roi
-
+        super(PhaseMap, self).__init__(size_org[0],size_org[1]//self.shrink, size_org[2]//self.shrink)
+        self.roi = np.array(vmem.roi[::self.shrink, ::self.shrink])
         self.vmin = -np.pi
         self.vmax = np.pi
         self.cmap = 'jet'
