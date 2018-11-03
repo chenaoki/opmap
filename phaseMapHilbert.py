@@ -8,13 +8,13 @@ from .videoData import VideoData
 from .f_peakdetect import peakdetect
 from .f_pixel import f_pixel_mean, f_pixel_phase
 
-from phaseMap import PhaseMap
+from .phaseMap import PhaseMap
 
 class PhaseMapHilbert( PhaseMap ):
 
     def __init__(self, vmem, width = 128, sigma_xy = 32, sigma_t = 5):
         
-        super(PhaseMap, self).__init__(vmem, width)
+        super(PhaseMapHilbert, self).__init__(vmem, width)
                 
         V = vmem.data[:,::self.shrink,::self.shrink]
         Vmean = np.apply_along_axis(f_pixel_mean, 0, V)

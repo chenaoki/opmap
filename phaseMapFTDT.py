@@ -8,13 +8,13 @@ from .videoData import VideoData
 from .f_peakdetect import peakdetect
 from .f_pixel import f_pixel_mean, f_pixel_phase
 
-from phaseMap import PhaseMap
+from .phaseMap import PhaseMap
 
 class PhaseMapFTDT( PhaseMap ):
 
     def __init__(self, vmem, v_mean, dt, width = 128, sigma_t = 1):
         
-        super(PhaseMap, self).__init__(vmem, width)
+        super(PhaseMapFTDT, self).__init__(vmem, width)
         self.v_mean  = v_mean 
                 
         V = vmem.data[:,::self.shrink,::self.shrink]
