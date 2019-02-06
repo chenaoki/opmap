@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter1d, filters
 from scipy.interpolate import interp1d
-from .videoData import VideoData
+from videoData import VideoData
 
 class APDMap( VideoData ):
 

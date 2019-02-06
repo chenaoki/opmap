@@ -4,11 +4,11 @@ import scipy.interpolate as interpolate
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import hilbert
-from .videoData import VideoData
-from .f_peakdetect import peakdetect
-from .f_pixel import f_pixel_mean, f_pixel_phase
+from videoData import VideoData
+from f_peakdetect import peakdetect
+from f_pixel import f_pixel_mean, f_pixel_phase
 
-from .phaseMap import PhaseMap
+from phaseMap import PhaseMap
 
 class PhaseMapHilbert( PhaseMap ):
 

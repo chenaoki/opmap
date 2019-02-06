@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from .videoData import VideoData
-from .f_pixel import f_pixel_apd
+from videoData import VideoData
+from f_pixel import f_pixel_apd
 from scipy.ndimage.filters import gaussian_filter1d
 
 class APDMap( VideoData ):

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import ndimage
-from .cmap import bipolar
-from .videoData import VideoData
+from cmap import bipolar
+from videoData import VideoData
 
 class VmemMap( VideoData ):
 

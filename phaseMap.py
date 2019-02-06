@@ -4,7 +4,7 @@ import scipy.interpolate as interpolate
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import hilbert
-from .videoData import VideoData
+from videoData import VideoData
 
 class PhaseMap( VideoData ):
 

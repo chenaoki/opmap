@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 import math
-from .videoData import VideoData
+from videoData import VideoData
 
 class PhaseVariancePeakMap( VideoData ):
 

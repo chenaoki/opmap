@@ -3,7 +3,7 @@ import numpy as np
 import scipy.interpolate as interpolate
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import hilbert
-from .f_peakdetect import peakdetect
+from f_peakdetect import peakdetect
 
 def f_pixel_peaks(ts):
     try:    
