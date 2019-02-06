@@ -50,6 +50,7 @@ RUN apt-get install -y curl grep sed dpkg && \
   apt-get clean
 
 RUN conda update -y conda
+RUN conda install -y accelerate
 RUN conda install -c menpo opencv3
 
 
