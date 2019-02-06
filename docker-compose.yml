@@ -1,0 +1,12 @@
+version: '2'
+services:
+  django:
+    build:
+      context: ./
+    image: chenaoki/opmap 
+    container_name: chenaoki_opmap
+    ports:
+      - "21642:8888"
+    volumes:
+      - ./:/notebooks
+
