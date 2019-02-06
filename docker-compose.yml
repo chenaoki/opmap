@@ -9,4 +9,5 @@ services:
       - "21642:8888"
     volumes:
       - ./:/notebooks
+      - /mnt:/mnt
 
