@@ -4,6 +4,8 @@ import scipy.interpolate as interpolate
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import hilbert
+from numba import double
+from numba.decorators import jit, autojit
 from videoData import VideoData
 from f_peakdetect import peakdetect
 from f_pixel import f_pixel_mean, f_pixel_phase
@@ -21,14 +23,26 @@ class PhaseMapHilbert( PhaseMap ):
         
         # spatial filtering
         if sigma_xy > 1:
-            for frame in range(len(Vmean)):
-                Vmean[frame,:,:] = gaussian_filter(Vmean[frame,:,:], sigma = sigma_xy)
+            #@jit(arg_types=double[:,:,:])
+            @autojit
+            def framewise(Vmean):
+                L,H,W = Vmean.shape
+                for frame in range(L):
+                    Vmean[frame,:,:] = gaussian_filter(Vmean[frame,:,:], sigma = sigma_xy)
+            framewise(Vmean)
                 
         Vamp = V-Vmean
         
         # temporal filtering
         if sigma_t > 1:
-            Vamp = np.apply_along_axis(gaussian_filter1d, 0, Vamp, sigma = sigma_t)
+            #@jit(arg_types=double[:,:,:])
+            @autojit
+            def pixelwise(Vamp):
+                L,H,W = Vamp.shape
+                for i in range(H):
+                    for j in range(W):
+                        Vamp[:,i,j] = gaussian_filter1d( Vamp[:,i,j], sigma = sigma_t)
+            pixelwise(Vamp)
         self.data = np.apply_along_axis(f_pixel_phase, 0, arr=Vamp)
         self.data *= self.roi
 
