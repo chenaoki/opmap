@@ -7,16 +7,15 @@ from scipy.signal import hilbert
 from videoData import VideoData
 
 class PhaseMap( VideoData ):
-
+    vmin = -np.pi
+    vmax = np.pi
+    cmap = 'jet'
+    
     def __init__(self, vmem, width = 128):
-        
         self.shrink = int(vmem.data.shape[2] / width)
         size_org = vmem.data.shape
         super(PhaseMap, self).__init__(size_org[0],size_org[1]//self.shrink, size_org[2]//self.shrink)
         self.roi = np.array(vmem.roi[::self.shrink, ::self.shrink])
-        self.vmin = -np.pi
-        self.vmax = np.pi
-        self.cmap = 'jet'
         return
     
     def smooth(self, size = 5):

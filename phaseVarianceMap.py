@@ -3,6 +3,9 @@ import scipy
 from videoData import VideoData
 
 class PhaseVarianceMap( VideoData ):
+    vmin = 0.0
+    vmax = 1.0
+    cmap = 'jet'
 
     def __init__(self, phasemap, size = 9):
         assert size > 0
@@ -22,9 +25,4 @@ class PhaseVarianceMap( VideoData ):
         self.roi = np.copy(phasemap.roi)
         self.roi = scipy.ndimage.binary_erosion(self.roi, structure=np.ones((size,size))).astype(phasemap.roi.dtype)
         self.data *= self.roi
-
-        self.vmin = 0.0
-        self.vmax = 1.0
-        self.cmap = 'gray'
-
 

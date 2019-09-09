@@ -4,6 +4,9 @@ from cmap import bipolar
 from videoData import VideoData
 
 class VmemMap( VideoData ):
+    vmin = -1.0
+    vmax = 1.0
+    cmap = bipolar(neutral=0, lutsize=1024)
 
     def __init__(self, rawcam):
         shape = rawcam.data.shape
@@ -17,10 +20,6 @@ class VmemMap( VideoData ):
         self.roi_org = np.copy(rawcam.roi)
         self.roi = np.copy(rawcam.roi)
         self.data = self.data_org*self.roi
-
-        self.vmin = -1.0
-        self.vmax = 1.0
-        self.cmap = bipolar(neutral=0, lutsize=1024)
         return
 
     def setDiffRange(self, diff_min=None, diff_max=None):

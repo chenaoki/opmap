@@ -4,6 +4,20 @@ import math
 from videoData import VideoData
 
 class PhaseVariancePeakMap( VideoData ):
+    vmin = 0
+    cmap = 'gray'
+    
+    @classmethod
+    def load(cls, npy_path):
+        data = np.load(npy_path)
+        assert len(data.shape) == 3
+        L,H,W = data.shape
+        obj = VideoData(1,1,1)
+        obj.data = data
+        obj.vmin = cls.vmin
+        obj.vmax = np.max(data)
+        obj.cmap = cls.cmap
+        return obj
 
     def __init__(self, pvmap, threshold=None):
         if threshold is not None:
@@ -18,9 +32,10 @@ class PhaseVariancePeakMap( VideoData ):
         self.data_label, self.coreNum = scipy.ndimage.label((pvmap.data>self.threshold)*1) 
         self.data = ( self.data_label > 0 ) * 1
 
-        self.vmin = 0
+        #self.vmin =  cls_vmin
         self.vmax = np.max(self.data) 
-        self.cmap = 'gray' #plt.cm.spectral 
+        #self.cmap = cls_cmap
+
 
     def getCoreLog(self):
         log_core = []

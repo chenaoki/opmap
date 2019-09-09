@@ -5,14 +5,29 @@ import scipy
 from util import makeMovie
 
 class VideoData(object):
+    vmin = 0.0
+    vmax = 1.0
+    cmap = 'hot'
+    
+    @classmethod
+    def load(cls, npy_path):
+        data = np.load(npy_path)
+        assert len(data.shape) == 3
+        L,H,W = data.shape
+        obj = VideoData(1,1,1)
+        obj.data = data
+        obj.vmin = cls.vmin
+        obj.vmax = cls.vmax
+        obj.cmap = cls.cmap
+        return obj
 
     def __init__(self, length, height, width ):
         self.data = np.zeros((length, height, width), dtype=np.float32)
         self.roi = np.ones( ( height, width), dtype=np.float32 )
-        self.vmin =  0.0
-        self.vmax = 1.0
-        self.cmap = 'hot'
-
+        #self.vmin =  cls_vmin
+        #self.vmax = cls_vmax
+        #self.cmap = cls_cmap
+        
     def showFrame(self, frame):
         assert frame >= 0 and frame < self.data.shape[0]
         plt.imshow(self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
