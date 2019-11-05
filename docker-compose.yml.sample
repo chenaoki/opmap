@@ -1,6 +1,6 @@
 version: '2'
 services:
-  django:
+  rename_me:
     build:
       context: ./
     image: chenaoki/opmap 
