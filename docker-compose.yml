@@ -1,0 +1,14 @@
+version: '2.3'
+services:
+  opapp:
+    build:
+      context: ./
+    image: chenaoki/opmap
+    runtime: nvidia
+    container_name: chenaoki_opmap
+    ports:
+      - "21642:8888"
+    volumes:
+      - ../:/notebooks
+      - /mnt:/mnt
+

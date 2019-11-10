@@ -1,4 +1,5 @@
 import numpy as np
+import cupy as xp
 import scipy
 import scipy.interpolate as interpolate
 from scipy.ndimage import gaussian_filter
@@ -6,6 +7,7 @@ from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import hilbert
 from numba import double
 from numba.decorators import jit, autojit
+from numba import cuda
 from videoData import VideoData
 from f_peakdetect import peakdetect
 from f_pixel import f_pixel_mean, f_pixel_phase
@@ -18,32 +20,17 @@ class PhaseMapHilbert( PhaseMap ):
         
         super(PhaseMapHilbert, self).__init__(vmem, width)
                 
-        V = vmem.data[:,::self.shrink,::self.shrink]
-        Vmean = np.apply_along_axis(f_pixel_mean, 0, V)
+        V = xp.asnumpy(vmem.data[:,::self.shrink,::self.shrink])
         
-        # spatial filtering
+        im_mean = np.mean(V, axis=0)
         if sigma_xy > 1:
-            #@jit(arg_types=double[:,:,:])
-            @autojit
-            def framewise(Vmean):
-                L,H,W = Vmean.shape
-                for frame in range(L):
-                    Vmean[frame,:,:] = gaussian_filter(Vmean[frame,:,:], sigma = sigma_xy)
-            framewise(Vmean)
-                
-        Vamp = V-Vmean
+            im_mean = np.array([gaussian_filter(im, sigma=sigma_xy) for im in im_mean])
         
-        # temporal filtering
+        Vamp = V-im_mean
         if sigma_t > 1:
-            #@jit(arg_types=double[:,:,:])
-            @autojit
-            def pixelwise(Vamp):
-                L,H,W = Vamp.shape
-                for i in range(H):
-                    for j in range(W):
-                        Vamp[:,i,j] = gaussian_filter1d( Vamp[:,i,j], sigma = sigma_t)
-            pixelwise(Vamp)
-        self.data = np.apply_along_axis(f_pixel_phase, 0, arr=Vamp)
+            Vamp = gaussian_filter1d(Vamp, sigma=sigma_t, axis=0)
+        
+        self.data = xp.asarray(np.apply_along_axis(f_pixel_phase, 0, arr=Vamp))
         self.data *= self.roi
 
         return

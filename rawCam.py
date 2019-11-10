@@ -1,7 +1,9 @@
 import numpy as np
+import cupy as xp
 from glob import glob
 import cv2
 from videoData import VideoData
+from multiprocessing.dummy import Pool
 
 class RawCam( VideoData ):
     cam_dtype={
@@ -11,36 +13,27 @@ class RawCam( VideoData ):
         'max10':np.ushort
     }
 
-    def __init__(self, path, cam_type, image_width, image_height, frame_start, frame_end):
 
-        if "numpy" == cam_type:
+    def __init__(self, path, cam_type, image_width, image_height, frame_start, frame_end, shrink=None):
 
-            self.files = sorted(glob(path+"/vmem_*.npy"))
-            assert len(self.files) > 0
-            if frame_end < 0 : frame_end = len(self.files) + frame_end + 1
-            self.files = self.files[frame_start:frame_end]
+        if shrink is None: shrink=1
+        
+        self.files = sorted(glob(path+"/*.raw*"))
+        assert len(self.files) > 0
+        self.files = self.files[frame_start:frame_end]
 
-            super(RawCam, self).__init__(len(self.files), image_height, image_width)
+        super(RawCam, self).__init__(len(self.files), image_height//shrink, image_width//shrink)
 
-            for i, f in enumerate(self.files):
-                im = np.load(f)
-                self.data[i, :,:] = im
+        def read_im(f):
+            im = np.fromfile(f, dtype=self.cam_dtype[cam_type])
+            im = im.reshape( image_height, image_width )[::shrink,::shrink]
+            return im
 
-        else:
+        with Pool() as p:
+            self.data = xp.asarray(p.map( read_im, self.files))
 
-            self.files = sorted(glob(path+"/*.raw*"))
-            assert len(self.files) > 0
-            self.files = self.files[frame_start:frame_end]
-
-            super(RawCam, self).__init__(len(self.files), image_height, image_width)
-
-            for i, f in enumerate(self.files):
-                im = np.fromfile(f, dtype=self.cam_dtype[cam_type])
-                im = im.reshape(image_height, image_width)
-                self.data[i, :,:] = im
-
-        self.vmin = np.min(self.data)
-        self.vmax = np.max(self.data)
+        self.vmin = xp.min(self.data)
+        self.vmax = xp.max(self.data)
         self.cmap = 'gray'
 
         return

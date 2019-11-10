@@ -1,21 +1,24 @@
 import numpy as np
+import cupy as xp
 import os, shutil
 import matplotlib.pyplot as plt
 import scipy
+from scipy.ndimage import gaussian_filter
+from scipy.ndimage.filters import gaussian_filter1d
 from util import makeMovie
 
 class VideoData(object):
 
     def __init__(self, length, height, width ):
-        self.data = np.zeros((length, height, width), dtype=np.float32)
-        self.roi = np.ones( ( height, width), dtype=np.float32 )
+        self.data = xp.zeros((length, height, width), dtype=np.float32)
+        self.roi = xp.ones( ( height, width), dtype=np.float32 )
         self.vmin =  0.0
         self.vmax = 1.0
         self.cmap = 'hot'
 
     def showFrame(self, frame):
         assert frame >= 0 and frame < self.data.shape[0]
-        plt.imshow(self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
+        plt.imshow( xp.asnumpy(self.data[frame, :, :]) , vmin=self.vmin, vmax=self.vmax, cmap=self.cmap)
 
     def setRectROI(self, top=None, bottom=None, left=None, right=None):
         if top is not None :
@@ -34,9 +37,9 @@ class VideoData(object):
 
     def setIntROI(self, val_min=None, val_max=None):
         if val_min is not None:
-            self.roi *= (np.min(self.data, axis=0)>val_min)*1
+            self.roi *= (xp.min(self.data, axis=0)>val_min)*1
         if val_max is not None:
-            self.roi *= (np.max(self.data, axis=0)<val_max)*1
+            self.roi *= (xp.max(self.data, axis=0)<val_max)*1
         self.data *= self.roi
     
     def morphROI(self, closing=None, erosion=None):
@@ -62,11 +65,11 @@ class VideoData(object):
             if frame % skip == 0:
                 plt.imsave(
                     '{0}/{1:0>6}.{2}'.format(savedir, int(frame/skip), img_type),
-                    self.data[frame, :, :], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap
+                    xp.asnumpy(self.data[frame, :, :]), vmin=self.vmin, vmax=self.vmax, cmap=self.cmap
                 )
         plt.imsave(
          '{0}/roi.{1}'.format(savedir, img_type),
-            self.roi, vmin=0.0, vmax=1.0, cmap='gray'
+         xp.asnumpy(self.roi), vmin=0.0, vmax=1.0, cmap='gray'
         )
         
     def saveMovie(self, save_path, skip=1):
@@ -87,7 +90,7 @@ class VideoData(object):
             assert y >= 0 and y < self.data.shape[1]
             assert x >= 0 and x < self.data.shape[2]
             ax = fig.add_subplot(len(points),1,i+1)
-            ts = self.data[start:end, y, x]
+            ts = xp.asnumpy(self.data[start:end, y, x])
             if filter_size is not None:
                 ts = scipy.signal.savgol_filter(ts, filter_size, 3)
             ax.plot(ts)
@@ -96,3 +99,19 @@ class VideoData(object):
         else:
             plt.savefig(savepath)
 
+    def smooth_xy(self, size):
+        assert size > 0
+        self.data = xp.asarray( [ gaussian_filter(im, sigma = size) for im in xp.asnumpy(self.data)])
+        self.data *= self.roi
+        return
+
+    def smooth_t(self,size):
+        assert size > 0
+        self.data = xp.asarray( gaussian_filter1d( xp.asnumpy(self.data), size, axis=0) )
+        return
+
+    def shrink_xy(self,interval):
+        assert interval > 0
+        self.data = self.data[:,::interval,::interval]
+        self.roi = self.roi[::interval,::interval]
+        return

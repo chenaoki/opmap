@@ -1,4 +1,5 @@
 import numpy as np
+import cupy as xp
 import scipy
 import scipy.interpolate as interpolate
 from scipy.ndimage import gaussian_filter
@@ -13,19 +14,20 @@ class PhaseMap( VideoData ):
         self.shrink = int(vmem.data.shape[2] / width)
         size_org = vmem.data.shape
         super(PhaseMap, self).__init__(size_org[0],size_org[1]//self.shrink, size_org[2]//self.shrink)
-        self.roi = np.array(vmem.roi[::self.shrink, ::self.shrink])
-        self.vmin = -np.pi
-        self.vmax = np.pi
+        self.roi = xp.array(vmem.roi[::self.shrink, ::self.shrink])
+        self.vmin = -xp.pi
+        self.vmax = xp.pi
         self.cmap = 'jet'
         return
     
     def smooth(self, size = 5):
-        for frame in range( self.data.shape[0]):
-            img_cos = np.cos(self.data[frame, :,:]) 
-            img_sin = np.sin(self.data[frame, :,:]) 
+        def framewise(im):
+            img_cos = xp.asnumpy(xp.cos(im)) 
+            img_sin = xp.asnumpy(xp.sin(im))
             img_cos = scipy.ndimage.filters.uniform_filter(img_cos, size=size, mode='constant')
             img_sin = scipy.ndimage.filters.uniform_filter(img_sin, size=size, mode='constant')
-            self.data[frame,:,:] = np.angle(img_cos+1j*img_sin)
+            return xp.asarray(np.angle(img_cos+1j*img_sin))
+        self.data = xp.asarray([framewise(im) for im in self.data])
 
     def smooth_median(self, size = 4):
         assert size > 0
