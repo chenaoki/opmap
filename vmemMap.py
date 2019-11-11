@@ -9,8 +9,8 @@ class VmemMap( VideoData ):
         shape = rawcam.data.shape
         super(VmemMap, self).__init__(shape[0], shape[1], shape[2])
 
-        self.roi_org = np.copy(rawcam.roi)
-        self.roi = np.copy(rawcam.roi)
+        self.roi_org = xp.copy(rawcam.roi)
+        self.roi = xp.copy(rawcam.roi)
         self.diff_max = rawcam.vmax - rawcam.vmin
         
         im_max = xp.max( rawcam.data, axis=0)
@@ -26,7 +26,7 @@ class VmemMap( VideoData ):
         return
 
     def setDiffRange(self, diff_min=None, diff_max=None):
-        self.roi = np.copy(self.roi_org) # reset
+        self.roi = xp.copy(self.roi_org) # reset
         if diff_min is None :
           diff_min = 0
         if diff_max is None :

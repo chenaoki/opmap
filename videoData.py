@@ -44,19 +44,19 @@ class VideoData(object):
     
     def morphROI(self, closing=None, erosion=None):
         if closing : 
-            self.roi = scipy.ndimage.binary_closing(
-                self.roi, 
+            self.roi = xp.asarray(scipy.ndimage.binary_closing(
+                xp.asnumpy(self.roi), 
                 structure=np.ones((closing,closing))).astype(self.roi.dtype
-            )
+            ))
         if erosion : 
-            self.roi = scipy.ndimage.binary_erosion(
-                self.roi, 
+            self.roi = xp.asarray(scipy.ndimage.binary_erosion(
+                xp.asnumpy(self.roi), 
                 structure=np.ones((erosion,erosion))).astype(self.roi.dtype
-            )
+            ))
         self.data *= self.roi
 
     def showROI(self):
-        plt.imshow(self.roi, vmin=0.0, vmax=1.0, cmap='gray')
+        plt.imshow(xp.asnumpy(self.roi), vmin=0.0, vmax=1.0, cmap='gray')
 
     def saveImage(self, savedir, img_type = 'png', skip=1):
         if not os.path.exists(savedir):

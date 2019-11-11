@@ -27,7 +27,7 @@ class RawCam( VideoData ):
         def read_im(f):
             im = np.fromfile(f, dtype=self.cam_dtype[cam_type])
             im = im.reshape( image_height, image_width )[::shrink,::shrink]
-            return im
+            return im.astype(np.float32)
 
         with Pool() as p:
             self.data = xp.asarray(p.map( read_im, self.files))
