@@ -61,3 +61,10 @@ def f_pixel_apd(ts, max_beats, thre_type, thre_up, thre_down):
     
 def f_pixel_phase(ts):
     return np.angle(hilbert(ts))
+
+def f_pixel_activation(ts, thre_up, thre_down):
+    list_up, _ = f_pixel_updown(ts, "peak", thre_up, thre_down)
+    ret = np.arange(len(ts), dtype=np.uint16)
+    for up in list_up:
+        ret[up:] -= ret[up]
+    return ret
